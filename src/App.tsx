@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import LabReportDemo from "./pages/LabReportDemo";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import Users from "./pages/Users";
+import SummaryMetricsPage from "./pages/SummaryMetricsPage";
 
 const queryClient = new QueryClient();
 
@@ -16,16 +18,18 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>  
+        <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Index />} />
           <Route path="/lab-report-demo/:labResultId" element={<LabReportDemo />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
+          <Route path="/users" element={<Users />} />
+<Route path="/summary-metrics" element={<SummaryMetricsPage />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
-
+  
 export default App;

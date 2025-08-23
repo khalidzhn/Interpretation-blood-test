@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import FileUploadZone from "@/components/dashboard/FileUploadZone";
 import MultiPatientOverview from "@/components/dashboard/MultiPatientOverview";
 
 import CriticalAlertCard from "@/components/dashboard/CriticalAlertCard";
-import SummaryMetrics from "@/components/dashboard/SummaryMetrics";
 import ChatInterface from "@/components/dashboard/ChatInterface";
 
 const Index = () => {
@@ -40,17 +39,6 @@ const Index = () => {
             Upload. Interpret. Act. — in under 2 minutes.
           </p>
         </motion.div>
-
-        {/* Summary Metrics Bar */}
-        <motion.div
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          <SummaryMetrics />
-        </motion.div>
-
         {/* Main Content Grid - 12 Column Layout */}
         <div className="grid grid-cols-12 gap-6">
           {/* Left Column - 8 columns */}

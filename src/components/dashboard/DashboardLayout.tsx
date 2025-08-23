@@ -39,54 +39,30 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
-
-  const navigationItems: NavigationItem[] = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: HomeIcon,
-      active: activeTab === "dashboard",
-    },
-    {
-      id: "upload",
-      label: "Upload Report",
-      icon: DocumentTextIcon,
-      active: activeTab === "upload",
-    },
-    {
-      id: "interpretation",
-      label: "AI Interpretation",
-      icon: SparklesIcon,
-      active: activeTab === "interpretation",
-    },
-    {
-      id: "alerts",
-      label: "Critical Alerts",
-      icon: BellIcon,
-      active: activeTab === "alerts",
-      badge: 7,
-    },
-    {
-      id: "generator",
-      label: "Report Generator",
-      icon: ChartBarIcon,
-      active: activeTab === "generator",
-    },
-    {
-      id: "lab-report",
-      label: "Lab Report Page",
-      icon: DocumentIcon,
-      active: activeTab === "lab-report",
-      href: "/lab-report-demo",
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: CogIcon,
-      active: activeTab === "settings",
-    },
-  ];
-
+  
+const navigationItems: NavigationItem[] = [
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    icon: HomeIcon,
+    active: activeTab === "dashboard",
+    href: "/",
+  },
+  {
+    id: "users",
+    label: "Users",
+    icon: UsersIcon,
+    active: activeTab === "users",
+    href: "/users",
+  },
+  {
+    id: "summary-metrics",
+    label: "Summary Metrics",
+    icon: ChartBarIcon,
+    active: activeTab === "summary-metrics",
+    href: "/summary-metrics",
+  },
+];
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -372,28 +348,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         {/* Neural Network Pattern */}
         <div className="absolute inset-0 neural-bg opacity-10" />
 
-        {/* Floating Particles */}
-        {Array.from({ length: 15 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 rounded-full bg-background"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.2, 0.8, 0.2],
-              scale: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: 4 + Math.random() * 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
+
 
         {/* Gradient Orbs */}
         <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-radial from-medical-blue/10 to-transparent rounded-full blur-3xl" />
