@@ -30,6 +30,15 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   maxSize = 10 * 1024 * 1024, // 10MB
   className = "",
 }) => {
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [showPatientModal, setShowPatientModal] = useState(false);
+  const [patientId, setPatientId] = useState("");
+  const [assignedDoctor, setAssignedDoctor] = useState("");
+  const doctorOptions = [
+    { value: "dr_ahmed", label: "Dr. Ahmed" },
+    { value: "dr_sara", label: "Dr. Sara" },
+    { value: "dr_john", label: "Dr. John" },
+  ];
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
   const uploadToBackend = async (file: File) => {
@@ -54,39 +63,17 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       uploadedFiles.every(f => f.status !== "uploading")
     ) {
       onUploadComplete?.();
+      setShowPatientModal(true);
       setUploadedFiles([]);
     }
   }, [uploadedFiles, onUploadComplete]);
-
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
-        file,
-        id: Math.random().toString(36).substr(2, 9),
-        status: "uploading",
-        progress: 0,
-      }));
-
-      setUploadedFiles((prev) => [...prev, ...newFiles]);
-      newFiles.forEach(async (uploadFile) => {
-        const success = await uploadToBackend(uploadFile.file);
-        setUploadedFiles((prev) =>
-          prev.map((f) =>
-            f.id === uploadFile.id
-              ? {
-                ...f,
-                status: success ? "success" : "error",
-                progress: 100,
-              }
-              : f,
-          ),
-        );
-      });
-
-      onFileUpload?.(acceptedFiles);
-    },
-    [onFileUpload],
-  );
+const onDrop = useCallback(
+  (acceptedFiles: File[]) => {
+    setPendingFiles(acceptedFiles);
+    setShowPatientModal(true);
+  },
+  []
+);
 
   const { getRootProps, getInputProps, isDragAccept, isDragReject } =
     useDropzone({
@@ -139,6 +126,85 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   return (
     <div className={`w-full ${className}`}>
       {/* Drop Zone */}
+      {showPatientModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-background rounded-xl shadow-xl p-8 w-full max-w-md glass-card border border-medical-glass-border"
+          >
+            <h3 className="text-xl font-bold mb-4 text-medical-blue">Patient Details</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1 text-medical-blue">Patient ID</label>
+              <input
+                type="text"
+                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-medical-blue"
+                value={patientId}
+                onChange={e => setPatientId(e.target.value)}
+                placeholder="Enter Patient ID"
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-1 text-medical-blue">Assigned Doctor</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-medical-blue"
+                value={assignedDoctor}
+                onChange={e => setAssignedDoctor(e.target.value)}
+              >
+                <option value="">Select Doctor</option>
+                {doctorOptions.map(doc => (
+                  <option key={doc.value} value={doc.value}>{doc.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 rounded-lg bg-medical-blue text-white font-semibold hover:bg-medical-blue/90"
+                onClick={async () => {
+                  // Optionally validate patientId and assignedDoctor here
+                  setShowPatientModal(false);
+                
+                  // Now upload the files
+                  const newFiles: UploadedFile[] = pendingFiles.map((file) => ({
+                    file,
+                    id: Math.random().toString(36).substr(2, 9),
+                    status: "uploading",
+                    progress: 0,
+                  }));
+                
+                  setUploadedFiles((prev) => [...prev, ...newFiles]);
+                  for (const uploadFile of newFiles) {
+                    const success = await uploadToBackend(uploadFile.file);
+                    setUploadedFiles((prev) =>
+                      prev.map((f) =>
+                        f.id === uploadFile.id
+                          ? {
+                              ...f,
+                              status: success ? "success" : "error",
+                              progress: 100,
+                            }
+                          : f
+                      )
+                    );
+                  }
+                  setPendingFiles([]);
+                }}
+              >
+                Save
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
+              onClick={() => {  
+                setShowPatientModal(false);
+                setPendingFiles([]);
+              }}              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <motion.div
         {...rootProps}
         className={`
@@ -189,10 +255,10 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
           >
             <CloudArrowUpIcon
               className={`w-16 h-16 mx-auto ${isDragAccept
-                  ? "text-medical-green"
-                  : isDragReject
-                    ? "text-medical-red"
-                    : "text-medical-blue"
+                ? "text-medical-green"
+                : isDragReject
+                  ? "text-medical-red"
+                  : "text-medical-blue"
                 } glow-blue`}
             />
           </motion.div>
@@ -317,7 +383,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                       <span>Uploading...</span>
                       <span>{uploadedFile.progress}%</span>
                     </div>
-                    <div className="h-1 bg-medical-dark rounded-full overflow-hidden">
+                    <div className="h-1 bg-background rounded-full overflow-hidden">
                       <motion.div
                         className={`h-full bg-${getStatusColor(uploadedFile.status)}`}
                         initial={{ width: 0 }}
@@ -335,5 +401,4 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     </div>
   );
 };
-
 export default FileUploadZone;
