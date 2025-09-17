@@ -7,6 +7,7 @@ import {
   CheckCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 interface FileUploadZoneProps {
   onFileUpload?: (files: File[]) => void;
@@ -41,12 +42,16 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   ];
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
-  const uploadToBackend = async (file: File) => {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+  const uploadToBackend = async (file: File, patientId: string, assignedDoctorId: string) => {
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("patient_id", patientId);
+    formData.append("assigned_doctor_id", "3");
 
     try {
-      const response = await fetch("http://backend-dev.eba-jfrvuvms.us-west-2.elasticbeanstalk.com/upload-pdf/", {
+      const response = await fetch(`${backendUrl}/upload-pdf/`, {
         method: "POST",
         body: formData,
       });
@@ -56,7 +61,6 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       return false;
     }
   };
-
   useEffect(() => {
     if (
       uploadedFiles.length > 0 &&
@@ -67,13 +71,13 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       setUploadedFiles([]);
     }
   }, [uploadedFiles, onUploadComplete]);
-const onDrop = useCallback(
-  (acceptedFiles: File[]) => {
-    setPendingFiles(acceptedFiles);
-    setShowPatientModal(true);
-  },
-  []
-);
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      setPendingFiles(acceptedFiles);
+      setShowPatientModal(true);
+    },
+    []
+  );
 
   const { getRootProps, getInputProps, isDragAccept, isDragReject } =
     useDropzone({
@@ -163,7 +167,7 @@ const onDrop = useCallback(
                 onClick={async () => {
                   // Optionally validate patientId and assignedDoctor here
                   setShowPatientModal(false);
-                
+
                   // Now upload the files
                   const newFiles: UploadedFile[] = pendingFiles.map((file) => ({
                     file,
@@ -171,18 +175,18 @@ const onDrop = useCallback(
                     status: "uploading",
                     progress: 0,
                   }));
-                
+
                   setUploadedFiles((prev) => [...prev, ...newFiles]);
                   for (const uploadFile of newFiles) {
-                    const success = await uploadToBackend(uploadFile.file);
+                    const success = await uploadToBackend(uploadFile.file, patientId, assignedDoctor);
                     setUploadedFiles((prev) =>
                       prev.map((f) =>
                         f.id === uploadFile.id
                           ? {
-                              ...f,
-                              status: success ? "success" : "error",
-                              progress: 100,
-                            }
+                            ...f,
+                            status: success ? "success" : "error",
+                            progress: 100,
+                          }
                           : f
                       )
                     );
@@ -194,10 +198,10 @@ const onDrop = useCallback(
               </button>
               <button
                 className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
-              onClick={() => {  
-                setShowPatientModal(false);
-                setPendingFiles([]);
-              }}              >
+                onClick={() => {
+                  setShowPatientModal(false);
+                  setPendingFiles([]);
+                }}              >
                 Cancel
               </button>
             </div>

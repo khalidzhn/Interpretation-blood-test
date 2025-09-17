@@ -8,42 +8,65 @@
    * Sophisticated dark theme with blue-teal-purple gradients and glassmorphism effects
    */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+--background: 218 30% 7%;
+    --foreground: 0 0% 100%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 218 25% 12%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 218 25% 15%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 200 100% 50%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 218 25% 18%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 218 25% 15%;
+    --muted-foreground: 218 20% 65%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 218 25% 20%;
+    --input: 218 25% 18%;
+    --ring: 217 91% 60%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --radius: 0.75rem;
+
+    --sidebar-background: 218 25% 10%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 218 25% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 218 25% 20%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* Baseerah Color Palette */
+    --medical-dark: 218 30% 7%;
+    --medical-darker: 218 35% 6%;
+    --medical-blue: 217 91% 60%;
+    --medical-teal: 178 100% 51%;
+    --medical-purple: 270 100% 70%;
+    --medical-cyan: 195 100% 50%;
+    --medical-green: 167 70% 41%;
+    --medical-amber: 38 92% 50%;
+    --medical-red: 0 84% 60%;
+
+    /* Glassmorphism Effects */
+    --medical-glass: 210 30% 15% / 0.1;
+    --medical-glass-border: 210 40% 98% / 0.1;
+
+    /* Neon Accent Colors */
+    --neon-blue: 200 100% 70%;
+    --neon-teal: 180 100% 60%;
+    --neon-purple: 270 100% 80%;
+    --neon-cyan: 195 100% 60%;
   }
   .dark {
     

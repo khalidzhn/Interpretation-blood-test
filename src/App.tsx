@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Users from "./pages/Users";
 import SummaryMetricsPage from "./pages/SummaryMetricsPage";
+import Hospitals from "./pages/Hospitals";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
           <Route path="/users" element={<Users />} />
 <Route path="/summary-metrics" element={<SummaryMetricsPage />} />
+<Route path="/hospitals" element={<Hospitals />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

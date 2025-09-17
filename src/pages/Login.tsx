@@ -1,16 +1,41 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { getBackendUrl } from "@/utils/backend";
+import { useNavigate } from "react-router-dom"; // Add this import
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate(); // Add this line
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate login
-    setTimeout(() => setLoading(false), 1500);
+    setError(null);
+    try {
+      const body = new URLSearchParams({
+        username: email,
+        password: password,
+      }).toString();
+
+      const res = await fetch(`${getBackendUrl()}/token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+      if (!res.ok) throw new Error("Invalid credentials");
+      const data = await res.json();
+      // Save token in localStorage
+      localStorage.setItem("access_token", data.access_token);
+      setLoading(false);
+      // Redirect to home page
+      navigate("/");
+    } catch (err: any) {
+      setError(err.message || "Login failed");
+      setLoading(false);
+    }
   };
 
   return (
@@ -22,9 +47,6 @@ const Login: React.FC = () => {
         transition={{ duration: 0.6 }}
       >
         <div className="flex flex-col items-center mb-6">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-medical-blue to-medical-purple flex items-center justify-center mb-2">
-            <span className="text-2xl font-bold text-white">B</span>
-          </div>
           <h2 className="text-2xl font-bold text-primary mb-1">Welcome Back</h2>
           <p className="text-muted-foreground text-sm">Sign in to your account</p>
         </div>
@@ -51,6 +73,9 @@ const Login: React.FC = () => {
               autoComplete="current-password"
             />
           </div>
+          {error && (
+            <div className="text-red-600 text-sm">{error}</div>
+          )}
           <button
             type="submit"
             disabled={loading}

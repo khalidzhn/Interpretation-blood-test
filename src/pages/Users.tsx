@@ -1,290 +1,402 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion, AnimatePresence } from "framer-motion";
+import { getBackendUrl } from "@/utils/backend";
 
 type User = {
-  id: string;
-  name: string;
-  email: string;
+    id: string;
+    uuid: string;
+    name: string;
+    email: string;
+    role?: string;
+    hospital?: string;
+    clinic?: string;
+    active?: boolean;
 };
-
 const ROLES = [
-  { value: "admin", label: "Admin" },
-  { value: "hospital admin", label: "Hospital Admin" },
-  { value: "clinic admin", label: "Clinic Admin" },
-  { value: "doctor", label: "Doctor" },
+    { value: "admin", label: "Admin" },
+    { value: "hospital admin", label: "Hospital Admin" },
+    { value: "clinic admin", label: "Clinic Admin" },
+    { value: "doctor", label: "Doctor" },
 ];
 
 // Dummy hospital/clinic data for demo. Replace with API calls if needed.
-const HOSPITALS = [
-  { id: "h1", name: "General Hospital" },
-  { id: "h2", name: "City Hospital" },
-];
-const CLINICS = {
-  h1: [
-    { id: "c1", name: "Cardiology" },
-    { id: "c2", name: "Neurology" },
-  ],
-  h2: [
-    { id: "c3", name: "Pediatrics" },
-    { id: "c4", name: "Orthopedics" },
-  ],
-};
+
+const PAGE_SIZE = 10;
 
 const Users: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    // Invite modal state
+    const [showInvite, setShowInvite] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState("");
+    const [inviteRole, setInviteRole] = useState("");
+    const [inviteHospital, setInviteHospital] = useState("");
+    const [inviteClinic, setInviteClinic] = useState("");
+    const [inviteLoading, setInviteLoading] = useState(false);
+    const [inviteError, setInviteError] = useState<string | null>(null);
+    const [inviteSuccess, setInviteSuccess] = useState(false);
+    const [hospitals, setHospitals] = useState<
+        { id: string; name: string; uuid: string; clinics: { id: string; name: string; uuid: string }[] }[]
+    >([]);
+useEffect(() => {
+    fetchUsers();
+}, []);
+    useEffect(() => {
+        const token = localStorage.getItem("access_token");
+        fetch(`${getBackendUrl()}/hospitals/`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then(res => res.json())
+            .then(data => {
+                const hospitalsArr = (Array.isArray(data) ? data : data.hospitals).map((h: any) => ({
+                    id: h.id,
+                    name: h.name,
+                    uuid: h.uuid,
+                    clinics: h.clinics || [],
+                }));
+                setHospitals(hospitalsArr);
+            });
+    }, []);
+    const clinics =
+        hospitals.find(h => h.id === inviteHospital || h.uuid === inviteHospital)?.clinics || [];
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
 
-  // Invite modal state
-  const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("");
-  const [inviteHospital, setInviteHospital] = useState("");
-  const [inviteClinic, setInviteClinic] = useState("");
-  const [inviteLoading, setInviteLoading] = useState(false);
-  const [inviteError, setInviteError] = useState<string | null>(null);
-  const [inviteSuccess, setInviteSuccess] = useState(false);
-
-  useEffect(() => {
-    fetch("http://backend-dev.eba-jfrvuvms.us-west-2.elasticbeanstalk.com/users/")
-      .then(res => {
-        if (!res.ok) throw new Error(`Error: ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        if (Array.isArray(data)) {
-          setUsers(data);
-        } else if (data && Array.isArray(data.users)) {
-          setUsers(data.users);
-        } else {
-          setUsers([]);
+const fetchUsers = () => {
+    const token = localStorage.getItem("access_token");
+    setLoading(true);
+    fetch(`${getBackendUrl()}/users/`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    })
+        .then(res => res.json())
+        .then(data => {
+            let usersArr = Array.isArray(data) ? data : data.users;
+            usersArr = usersArr.map((u: any) => ({
+                ...u,
+                active: u.is_active,
+            }));
+            setUsers(usersArr);
+            setLoading(false);
+        })
+        .catch(err => {
+            setError(err.message);
+            setLoading(false);
+        });
+};
+    const handleToggleActive = async (userUuid: string, currentActive: boolean) => {
+        const token = localStorage.getItem("access_token");
+        try {
+            const res = await fetch(`${getBackendUrl()}/users/${userUuid}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ is_active: !currentActive }),
+            });
+            if (!res.ok) throw new Error("Failed to update user status");
+            setUsers(users =>
+                users.map(u =>
+                    u.uuid === userUuid ? { ...u, active: !currentActive } : u
+                )
+            );
+        } catch (err: any) {
+            alert(err.message || "Failed to update user status");
         }
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
+    };
+    const filteredUsers = useMemo(() => {
+        if (!search) return users;
+        const lower = search.toLowerCase();
+        return users.filter(u =>
+            (u.email || "").toLowerCase().includes(lower) ||
+            (u.role || "").toLowerCase().includes(lower) ||
+            (u.hospital || "").toLowerCase().includes(lower) ||
+            (u.clinic || "").toLowerCase().includes(lower) ||
+            (u.name || "").toLowerCase().includes(lower)
+        );
+    }, [users, search]);
+    useEffect(() => { setPage(1); }, [search]);
 
-  // Reset invite modal state when closed
-  const closeInvite = () => {
-    setShowInvite(false);
-    setInviteEmail("");
-    setInviteRole("");
-    setInviteHospital("");
-    setInviteClinic("");
-    setInviteError(null);
-    setInviteSuccess(false);
-    setInviteLoading(false);
-  };
+    // Pagination
+    const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
+    const paginatedUsers = filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // Determine if send button should be enabled
-  const canSend =
-    inviteEmail &&
-    inviteRole &&
-    (
-      inviteRole === "admin" ||
-      (inviteRole === "hospital admin" && inviteHospital) ||
-      ((inviteRole === "clinic admin" || inviteRole === "doctor") && inviteHospital && inviteClinic)
-    );
+    // Reset invite modal state when closed
+    const closeInvite = () => {
+        setShowInvite(false);
+        setInviteEmail("");
+        setInviteRole("");
+        setInviteHospital("");
+        setInviteClinic("");
+        setInviteError(null);
+        setInviteSuccess(false);
+        setInviteLoading(false);
+    };
 
-  // Handle send invitation
-  const handleSendInvite = async () => {
+    // Determine if send button should be enabled
+    const canSend =
+        inviteEmail &&
+        inviteRole &&
+        (
+            inviteRole === "admin" ||
+            (inviteRole === "hospital admin" && inviteHospital) ||
+            ((inviteRole === "clinic admin" || inviteRole === "doctor") && inviteHospital && inviteClinic)
+        );
+
+ const handleSendInvite = async () => {
     setInviteLoading(true);
     setInviteError(null);
     setInviteSuccess(false);
     try {
-      const payload: any = {
-        email: inviteEmail,
-        role: inviteRole,
-      };
-      if (inviteRole !== "admin") {
-        payload.hospitalId = inviteHospital;
-      }
-      if (inviteRole === "clinic admin" || inviteRole === "doctor") {
-        payload.clinicId = inviteClinic;
-      }
-      const res = await fetch("http://backend-dev.eba-jfrvuvms.us-west-2.elasticbeanstalk.com/send-invitation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Failed to send invitation");
-      setInviteSuccess(true);
-      setTimeout(closeInvite, 1500);
+        const payload: any = {
+            email: inviteEmail,
+            role: inviteRole,
+        };
+        if (inviteHospital) {
+            payload.assigned_hospital_id = inviteHospital;
+        }
+        if (inviteClinic) {
+            payload.assigned_clinic_id = inviteClinic;
+        }
+        const token = localStorage.getItem("access_token");
+        const res = await fetch(`${getBackendUrl()}/invite`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("Failed to send invitation");
+        setInviteSuccess(true);
+        fetchUsers(); // update table after invite
+        setTimeout(closeInvite, 1500);
     } catch (err: any) {
-      setInviteError(err.message || "Failed to send invitation");
+        setInviteError(err.message || "Failed to send invitation");
     } finally {
-      setInviteLoading(false);
+        setInviteLoading(false);
     }
-  };
+};
+    // Clinics for selected hospital
 
-  // Clinics for selected hospital
-  const clinicsForHospital = inviteHospital ? CLINICS[inviteHospital] || [] : [];
-
-  return (
-    <DashboardLayout>
-      <div className="max-w-5xl mx-auto">
-        <motion.div
-          className="glass-card p-8 rounded-2xl shadow-xl border border-border mt-8"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-primary">All Users</h2>
-            <button
-              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition"
-              onClick={() => setShowInvite(true)}
-            >
-              Invite User
-            </button>
-          </div>
-          {loading ? (
-            <div className="text-center text-muted-foreground py-10">Loading...</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-border rounded-xl overflow-hidden bg-background">
-                <thead>
-                  <tr className="bg-card text-foreground">
-                    <th className="p-3 text-left">ID</th>
-                    <th className="p-3 text-left">Name</th>
-                    <th className="p-3 text-left">Email</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {error || users.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="text-center text-muted-foreground py-8">
-                        {error ? "Nothing found." : "No users found."}
-                      </td>
-                    </tr>
-                  ) : (
-                    users.map(user => (
-                      <tr key={user.id} className="even:bg-muted">
-                        <td className="p-3">{user.id}</td>
-                        <td className="p-3">{user.name}</td>
-                        <td className="p-3">{user.email}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </motion.div>
-      </div>
-
-      {/* Invite User Modal */}
-      <AnimatePresence>
-        {showInvite && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-background rounded-2xl p-8 shadow-2xl w-full max-w-md border border-border relative"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-            >
-              <button
-                className="absolute top-4 right-4 text-xl text-muted-foreground hover:text-primary"
-                onClick={closeInvite}
-                aria-label="Close"
-              >
-                ×
-              </button>
-              <h3 className="text-xl font-bold mb-4 text-primary">Invite User</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-primary">Email</label>
-                  <input
-                    type="email"
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={inviteEmail}
-                    onChange={e => setInviteEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-primary">Role</label>
-                  <select
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground"
-                    value={inviteRole}
-                    onChange={e => {
-                      setInviteRole(e.target.value);
-                      setInviteHospital("");
-                      setInviteClinic("");
-                    }}
-                    required
-                  >
-                    <option value="">Select role</option>
-                    {ROLES.map(role => (
-                      <option key={role.value} value={role.value}>{role.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {(inviteRole === "hospital admin" || inviteRole === "clinic admin" || inviteRole === "doctor") && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-primary">Hospital</label>
-                    <select
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground"
-                      value={inviteHospital}
-                      onChange={e => {
-                        setInviteHospital(e.target.value);
-                        setInviteClinic("");
-                      }}
-                      required
-                    >
-                      <option value="">Select hospital</option>
-                      {HOSPITALS.map(h => (
-                        <option key={h.id} value={h.id}>{h.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                {(inviteRole === "clinic admin" || inviteRole === "doctor") && inviteHospital && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-primary">Clinic</label>
-                    <select
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground"
-                      value={inviteClinic}
-                      onChange={e => setInviteClinic(e.target.value)}
-                      required
-                    >
-                      <option value="">Select clinic</option>
-                      {clinicsForHospital.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                {inviteError && (
-                  <div className="text-red-600 text-sm">{inviteError}</div>
-                )}
-                {inviteSuccess && (
-                  <div className="text-green-600 text-sm">Invitation sent!</div>
-                )}
-                <button
-                  className={`w-full py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition disabled:opacity-50`}
-                  disabled={!canSend || inviteLoading}
-                  onClick={handleSendInvite}
-                  type="button"
+    return (
+        <DashboardLayout>
+            <div className="max-w-5xl mx-auto">
+                <motion.div
+                    className="glass-card p-8 rounded-2xl shadow-xl border border-border mt-8"
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
                 >
-                  {inviteLoading ? "Sending..." : "Send"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </DashboardLayout>
-  );
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                        <h2 className="text-2xl font-bold text-primary">All Users</h2>
+                        <div className="flex gap-2 w-full md:w-auto">
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                className="px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full md:w-64"
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                            />
+                            <button
+                                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition"
+                                onClick={() => setShowInvite(true)}
+                            >
+                                Invite User
+                            </button>
+                        </div>
+                    </div>
+                    {loading ? (
+                        <div className="text-center text-muted-foreground py-10">Loading...</div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full border border-border rounded-xl overflow-hidden bg-background">
+                                <thead>
+                                    <tr className="bg-card text-foreground">
+                                        <th className="p-3 text-left">Email</th>
+                                        <th className="p-3 text-left">Role</th>
+                                        <th className="p-3 text-left">Hospital</th>
+                                        <th className="p-3 text-left">Clinic</th>
+                                        <th className="p-3 text-left">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {error || paginatedUsers.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="text-center text-muted-foreground py-8">
+                                                {error ? "Nothing found." : "No users found."}
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        paginatedUsers.map(user => (
+                                            <tr key={user.id} className="even:bg-muted">
+                                                <td className="p-3">{user.email}</td>
+                                                <td className="p-3">{user.role || "-"}</td>
+                                                <td className="p-3">{user.hospital || "-"}</td>
+                                                <td className="p-3">{user.clinic || "-"}</td>
+                                                <td className="p-3">
+                                                    <td className="p-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleToggleActive(user.uuid, !!user.active)}
+                                                            className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${user.active ? "bg-green-500" : "bg-gray-300"
+                                                                }`}
+                                                            aria-pressed={!!user.active}
+                                                            aria-label={user.active ? "Disable user" : "Enable user"}
+                                                        >
+                                                            <span
+                                                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${user.active ? "translate-x-5" : "translate-x-1"
+                                                                    }`}
+                                                            />
+                                                        </button>
+                                                        <span className={`ml-2 text-xs font-semibold ${user.active ? "text-green-600" : "text-gray-500"}`}>
+                                                            {user.active ? "Enabled" : "Disabled"}
+                                                        </span>
+                                                    </td>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="flex justify-center items-center gap-2 mt-6">
+                                    <button
+                                        className="px-3 py-1 rounded bg-muted text-foreground disabled:opacity-50"
+                                        onClick={() => setPage(page - 1)}
+                                        disabled={page === 1}
+                                    >
+                                        Prev
+                                    </button>
+                                    <span className="text-sm">
+                                        Page {page} of {totalPages}
+                                    </span>
+                                    <button
+                                        className="px-3 py-1 rounded bg-muted text-foreground disabled:opacity-50"
+                                        onClick={() => setPage(page + 1)}
+                                        disabled={page === totalPages}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </motion.div>
+            </div>
+            {/* Invite User Modal */}
+            <AnimatePresence>
+                {showInvite && (
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="bg-background rounded-2xl p-8 shadow-2xl w-full max-w-md border border-border relative"
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                        >
+                            <button
+                                className="absolute top-4 right-4 text-xl text-muted-foreground hover:text-primary"
+                                onClick={closeInvite}
+                                aria-label="Close"
+                            >
+                                ×
+                            </button>
+                            <h3 className="text-xl font-bold mb-4 text-primary">Invite User</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-primary">Email</label>
+                                    <input
+                                        type="email"
+                                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        value={inviteEmail}
+                                        onChange={e => setInviteEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-primary">Role</label>
+                                    <select
+                                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground"
+                                        value={inviteRole}
+                                        onChange={e => {
+                                            setInviteRole(e.target.value);
+                                            setInviteHospital("");
+                                            setInviteClinic("");
+                                        }}
+                                        required
+                                    >
+                                        <option value="">Select role</option>
+                                        {ROLES.map(role => (
+                                            <option key={role.value} value={role.value}>{role.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {(inviteRole === "hospital admin" || inviteRole === "clinic admin" || inviteRole === "doctor") && (
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 text-primary">Hospital</label>
+                                        <select
+                                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground"
+                                            value={inviteHospital}
+                                            onChange={e => {
+                                                setInviteHospital(e.target.value);
+                                                setInviteClinic("");
+                                            }}
+                                            required
+                                        >
+                                            <option value="">Select hospital</option>
+                                            {hospitals.map(h => (
+                                                <option key={h.uuid} value={h.uuid}>{h.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                                {(inviteRole === "clinic admin" || inviteRole === "doctor") && inviteHospital && (
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 text-primary">Clinic</label>
+                                        <select
+                                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground"
+                                            value={inviteClinic}
+                                            onChange={e => setInviteClinic(e.target.value)}
+                                            required
+                                        >
+                                            <option value="">Select clinic</option>
+                                            {clinics.map(c => (
+                                                <option key={c.uuid} value={c.uuid}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                                {inviteError && (
+                                    <div className="text-red-600 text-sm">{inviteError}</div>
+                                )}
+                                {inviteSuccess && (
+                                    <div className="text-green-600 text-sm">Invitation sent!</div>
+                                )}
+                                <button
+                                    className={`w-full py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition disabled:opacity-50`}
+                                    disabled={!canSend || inviteLoading}
+                                    onClick={handleSendInvite}
+                                    type="button"
+                                >
+                                    {inviteLoading ? "Sending..." : "Send"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </DashboardLayout>
+    );
 };
 
 export default Users;

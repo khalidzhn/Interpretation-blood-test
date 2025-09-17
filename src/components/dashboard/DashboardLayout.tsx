@@ -17,6 +17,9 @@ import {
 } from "@heroicons/react/24/outline";
 import LanguageToggle from "./LanguageToggle";
 import Header from "@/components/Header";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
+import { ThemeToggleButton } from "@/components/Header";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -36,33 +39,61 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   className = "",
 }) => {
-  
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    navigate("/login");
+  };
+
+  let userTitle = "";
+  let userFullName = "";
+  try {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      userTitle = decoded.title || "";
+      userFullName = decoded.full_name || decoded.name || "";
+    }
+  } catch (e) {
+    // Invalid token or not logged in
+  }
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
-  
-const navigationItems: NavigationItem[] = [
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: HomeIcon,
-    active: activeTab === "dashboard",
-    href: "/",
-  },
-  {
-    id: "users",
-    label: "Users",
-    icon: UsersIcon,
-    active: activeTab === "users",
-    href: "/users",
-  },
-  {
-    id: "summary-metrics",
-    label: "Summary Metrics",
-    icon: ChartBarIcon,
-    active: activeTab === "summary-metrics",
-    href: "/summary-metrics",
-  },
-];
+
+  const navigationItems: NavigationItem[] = [
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: HomeIcon,
+      active: activeTab === "dashboard",
+      href: "/",
+    },
+    {
+      id: "users",
+      label: "Users",
+      icon: UsersIcon,
+      active: activeTab === "users",
+      href: "/users",
+    },
+    {
+      id: "Hospitals",
+      label: "Hospitals",
+      icon: ChartBarIcon,
+      active: activeTab === "Hospitals",
+      href: "/Hospitals",
+    },
+    {
+      id: "summary-metrics",
+      label: "Summary Metrics",
+      icon: ChartBarIcon,
+      active: activeTab === "summary-metrics",
+      href: "/summary-metrics",
+    },
+
+  ];
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -78,13 +109,12 @@ const navigationItems: NavigationItem[] = [
   };
 
   return (
-<div className="min-h-screen bg-background text-foreground">
-            <Header />
+    <div className="min-h-screen bg-background text-foreground">
+      <Header />
 
       <motion.aside
-        className={`fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border z-40 transition-all duration-300 ${
-          isSidebarOpen ? "w-64" : "w-16"
-        }`}
+        className={`fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border z-40 transition-all duration-300 ${isSidebarOpen ? "w-64" : "w-16"
+          }`}
         initial={{ x: -100 }}
         animate={{ x: 0 }}
         transition={{ duration: 0.5 }}
@@ -92,7 +122,7 @@ const navigationItems: NavigationItem[] = [
         {/* Logo & Brand */}
         <div className="p-4 border-b border-medical-glass-border">
           <div className="flex items-center gap-3">
-<div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">              <SparklesIcon className="w-6 h-6 text-foreground" />
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">              <SparklesIcon className="w-6 h-6 text-foreground" />
             </div>
             {isSidebarOpen && (
               <motion.div
@@ -113,14 +143,13 @@ const navigationItems: NavigationItem[] = [
         <nav className="p-4 space-y-2">
           {navigationItems.map((item, index) =>
             item.href ? (
-              <motion.a 
+              <motion.a
                 key={item.id}
                 href={item.href}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
-                  item.active
-                    ? "bg-primary/20 text-primary border border-primary/30"
-    : "hover:bg-accent text-muted-foreground hover:text-foreground"
-                }`}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${item.active
+                  ? "bg-primary/20 text-primary border border-primary/30"
+                  : "hover:bg-accent text-muted-foreground hover:text-foreground"
+                  }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 initial={{ opacity: 0, x: -20 }}
@@ -141,11 +170,10 @@ const navigationItems: NavigationItem[] = [
               <motion.button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
-                  item.active
-                    ? "bg-primary/20 text-primary border border-primary/30"
-    : "hover:bg-accent text-muted-foreground hover:text-foreground"
-                }`}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${item.active
+                  ? "bg-primary/20 text-primary border border-primary/30"
+                  : "hover:bg-accent text-muted-foreground hover:text-foreground"
+                  }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 initial={{ opacity: 0, x: -20 }}
@@ -208,9 +236,8 @@ const navigationItems: NavigationItem[] = [
 
       {/* Main Content */}
       <div
-        className={`transition-all duration-300 ${
-          isSidebarOpen ? "ml-64" : "ml-16"
-        }`}
+        className={`transition-all duration-300 ${isSidebarOpen ? "ml-64" : "ml-16"
+          }`}
       >
         {/* Top Header */}
         <motion.header
@@ -219,8 +246,11 @@ const navigationItems: NavigationItem[] = [
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
+          <ThemeToggleButton />
+
           <div className="flex items-center justify-between">
             {/* Left Section */}
+            
             <div className="flex items-center gap-4">
               <button
                 onClick={toggleSidebar}
@@ -233,14 +263,7 @@ const navigationItems: NavigationItem[] = [
                 <h1 className="text-xl font-bold text-foreground">
                   Lab Interpretation Dashboard
                 </h1>
-                <p className="text-sm text-muted-foreground">
-                  {currentTime.toLocaleDateString("en-US", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
+             
               </div>
             </div>
 
@@ -263,72 +286,37 @@ const navigationItems: NavigationItem[] = [
             </div>
 
             {/* Right Section */}
+            
             <div className="flex items-center gap-3">
-              {/* Real-time Clock */}
-              <div className="text-right">
-                <div className="text-sm font-mono text-primary">
-                  {currentTime.toLocaleTimeString()}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  UTC {new Date().getTimezoneOffset() / -60}
-                </div>
-              </div>
+
 
               {/* Language Toggle */}
-              <LanguageToggle />
-
-              {/* Notifications */}
-              <button className="relative p-2 rounded-lg hover:bg-popover/50 transition-colors">
-                <BellIcon className="w-5 h-5 text-primary" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-medical-red rounded-full flex items-center justify-center">
-                  <span className="text-xs text-foreground font-bold">5</span>
-                </div>
+              {/* <LanguageToggle /> */}
+               {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="ml-4 px-3 py-1 rounded-lg bg-destructive text-white text-sm font-semibold hover:bg-destructive/80 transition"
+                title="Logout"
+              >
+                Logout
               </button>
-
               {/* User Profile */}
-              <div className="flex items-center gap-3 pl-3 border-l border-medical-glass-border">
-                <div className="text-right">
-                  <div className="text-sm font-medium text-foreground">
-                    Dr. Sarah Chen
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Lead Diagnostician
-                  </div>
+              {/* User Profile */}
+              <div className="text-right">
+                <div className="text-sm font-medium text-foreground">
+                  {userTitle}. {userFullName}
                 </div>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-medical-teal to-medical-purple flex items-center justify-center">
-                  <span className="text-sm font-bold text-foreground">SC</span>
-                </div>
+                {/* Theme Toggle Button */}
               </div>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-medical-teal to-medical-purple flex items-center justify-center">
+                <span className="text-sm font-bold text-foreground">{userTitle}</span>
+              </div>
+             
             </div>
           </div>
 
-          {/* Performance Indicators */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-medical-green animate-neural-pulse" />
-                <span className="text-xs text-medical-green">
-                  AI Processing: 99.2% uptime
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-background animate-neural-pulse" />
-                <span className="text-xs text-primary">
-                  Response Time: 0.3s avg
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-medical-purple animate-neural-pulse" />
-                <span className="text-xs text-medical-purple">
-                  Confidence: 94.7% avg
-                </span>
-              </div>
-            </div>
 
-            <div className="text-xs text-muted-foreground">
-              Neural Network v2.1.3 | Last updated: 2 minutes ago
-            </div>
-          </div>
+
         </motion.header>
 
         {/* Page Content */}

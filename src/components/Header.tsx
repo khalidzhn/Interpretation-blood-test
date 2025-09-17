@@ -1,6 +1,6 @@
 import React from "react";
 
-const ThemeToggleButton: React.FC = () => {
+export const ThemeToggleButton: React.FC = () => {
   const [isDark, setIsDark] = React.useState(() =>
     typeof window !== "undefined"
       ? document.documentElement.classList.contains("dark")
@@ -43,11 +43,8 @@ const ThemeToggleButton: React.FC = () => {
 };
 
 const Header: React.FC = () => (
-  <header className="w-full px-6 py-4 bg-background dark:bg-medical-dark border-b border-medical-glass-border flex items-center justify-between">
-    <div className="text-xl font-bold text-medical-blue dark:text-white">
-      AI Medical Dashboard
-    </div>
-    <ThemeToggleButton />
+  <header >
+
   </header>
 );
 

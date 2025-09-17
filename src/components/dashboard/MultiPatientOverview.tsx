@@ -9,6 +9,9 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { useNavigate } from "react-router-dom"; 
+
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 interface PatientCase {
   id: string;
@@ -55,13 +58,22 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
 }) => {
   const [expandedCase, setExpandedCase] = useState<string | null>(null);
   const [analysisResults, setAnalysisResults] = useState<AnalysisResult[]>([]);
+  const navigate = useNavigate(); 
 
-  useEffect(() => {
-    fetch("http://backend-dev.eba-jfrvuvms.us-west-2.elasticbeanstalk.com/analysis-results/")
-      .then((res) => res.json())
-      .then((data) => setAnalysisResults(data));
-  }, []);
-
+useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    fetch(`${backendUrl}/analysis-results/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setAnalysisResults(data));
+}, []);
   const getStatusColor = (riskLevel: string) => {
     switch (riskLevel) {
       case "High":
