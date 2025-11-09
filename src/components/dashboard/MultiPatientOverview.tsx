@@ -6,7 +6,6 @@ import {
   CheckCircleIcon,
   ClockIcon,
   SparklesIcon,
-  ChevronDownIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
@@ -173,11 +172,6 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
                       </span>
                     </div>
                   </div>
-                  {expandedCase === patient.patient_id ? (
-                    <ChevronDownIcon className="w-5 h-5 text-muted-foreground" />
-                  ) : (
-                    <ChevronRightIcon className="w-5 h-5 text-muted-foreground" />
-                  )}
                   <motion.div
                     animate={{ rotate: expandedCase === patient.patient_id ? 90 : 0 }}
                     transition={{ duration: 0.2 }}
