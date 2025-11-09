@@ -9,9 +9,8 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { useNavigate } from "react-router-dom"; 
-
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+import { useNavigate } from "react-router-dom";
+import { getBackendUrl } from "@/utils/backend";
 
 interface PatientCase {
   id: string;
@@ -58,22 +57,38 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
 }) => {
   const [expandedCase, setExpandedCase] = useState<string | null>(null);
   const [analysisResults, setAnalysisResults] = useState<AnalysisResult[]>([]);
-  const navigate = useNavigate(); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
       navigate("/login");
       return;
     }
+    const backendUrl = getBackendUrl();
     fetch(`${backendUrl}/analysis-results/`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setAnalysisResults(data));
-}, []);
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setAnalysisResults(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch analysis results:", err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [navigate]);
   const getStatusColor = (riskLevel: string) => {
     switch (riskLevel) {
       case "High":
@@ -101,6 +116,21 @@ useEffect(() => {
           <SparklesIcon className="w-6 h-6 text-medical-blue" />
           AI Patient Intelligence Hub
         </h2>
+        {loading && (
+          <div className="text-center py-8 text-muted-foreground">
+            Loading patient analysis results...
+          </div>
+        )}
+        {error && (
+          <div className="text-center py-8 text-medical-red">
+            Error loading results: {error}
+          </div>
+        )}
+        {!loading && analysisResults.length === 0 && !error && (
+          <div className="text-center py-8 text-muted-foreground">
+            No analysis results available
+          </div>
+        )}
         {analysisResults.map((patient, index) => {
           if (!patient.IntelligenceHubCard) return null;
 

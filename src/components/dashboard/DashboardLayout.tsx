@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
   Bars3Icon,
@@ -17,13 +17,14 @@ import {
 } from "@heroicons/react/24/outline";
 import LanguageToggle from "./LanguageToggle";
 import Header from "@/components/Header";
-import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
+import * as jwtDecodeLib from "jwt-decode";
+import { useNavigate, NavLink, Outlet } from "react-router-dom";
 import { ThemeToggleButton } from "@/components/Header";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
   className?: string;
+  children?: React.ReactNode;
 }
 
 interface NavigationItem {
@@ -36,22 +37,23 @@ interface NavigationItem {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
-  children,
   className = "",
+  children,
 }) => {
 
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem("access_token");
     navigate("/login");
-  };
+  }, [navigate]);
 
   let userTitle = "";
   let userFullName = "";
   try {
     const token = localStorage.getItem("access_token");
     if (token) {
+      const jwtDecode: any = (jwtDecodeLib as any).default ?? (jwtDecodeLib as any).jwtDecode ?? jwtDecodeLib;
       const decoded: any = jwtDecode(token);
       userTitle = decoded.title || "";
       userFullName = decoded.full_name || decoded.name || "";
@@ -60,53 +62,30 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     // Invalid token or not logged in
   }
 
+  const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState("dashboard");
 
-  const navigationItems: NavigationItem[] = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: HomeIcon,
-      active: activeTab === "dashboard",
-      href: "/",
-    },
-    {
-      id: "users",
-      label: "Users",
-      icon: UsersIcon,
-      active: activeTab === "users",
-      href: "/users",
-    },
-    {
-      id: "Hospitals",
-      label: "Hospitals",
-      icon: ChartBarIcon,
-      active: activeTab === "Hospitals",
-      href: "/Hospitals",
-    },
-    {
-      id: "summary-metrics",
-      label: "Summary Metrics",
-      icon: ChartBarIcon,
-      active: activeTab === "summary-metrics",
-      href: "/summary-metrics",
-    },
+  const navigationItems: NavigationItem[] = useMemo(() => ([
+    { id: "dashboard", label: "Dashboard", icon: HomeIcon, href: "/" },
+    { id: "users", label: "Users", icon: UsersIcon, href: "/users" },
+    { id: "hospitals", label: "Hospitals", icon: ChartBarIcon, href: "/hospitals" },
+    { id: "summary-metrics", label: "Summary Metrics", icon: ChartBarIcon, href: "/summary-metrics" },
+  ]), []);
 
-  ];
-  const [currentTime, setCurrentTime] = useState(new Date());
-
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    const id = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(id);
+  }, [search]);
 
-    return () => clearInterval(timer);
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen(prev => !prev);
   }, []);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  useEffect(() => {
+    setIsSidebarOpen(!isMobile);
+  }, [isMobile]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -141,57 +120,29 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         {/* Navigation */}
         <nav className="p-4 space-y-2">
-          {navigationItems.map((item, index) =>
-            item.href ? (
-              <motion.a
-                key={item.id}
-                href={item.href}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${item.active
-                  ? "bg-primary/20 text-primary border border-primary/30"
-                  : "hover:bg-accent text-muted-foreground hover:text-foreground"
-                  }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
+          {navigationItems.map((item, index) => (
+            <motion.div
+              key={item.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <NavLink
+                to={item.href || "/"}
+                className={({ isActive }) => `w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${isActive ? "bg-primary/20 text-primary border border-primary/30" : "hover:bg-accent text-muted-foreground hover:text-foreground"}`}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 {isSidebarOpen && (
                   <span className="text-sm font-medium">{item.label}</span>
                 )}
                 {isSidebarOpen && item.badge && (
-                  <span className="ml-auto px-2 py-1 text-xs bg-medical-red rounded-full text-foreground">
-                    {item.badge}
-                  </span>
+                  <span className="ml-auto px-2 py-1 text-xs bg-medical-red rounded-full text-foreground">{item.badge}</span>
                 )}
-              </motion.a>
-            ) : (
-              <motion.button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${item.active
-                  ? "bg-primary/20 text-primary border border-primary/30"
-                  : "hover:bg-accent text-muted-foreground hover:text-foreground"
-                  }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                {isSidebarOpen && (
-                  <span className="text-sm font-medium">{item.label}</span>
-                )}
-                {isSidebarOpen && item.badge && (
-                  <span className="ml-auto px-2 py-1 text-xs bg-medical-red rounded-full text-foreground">
-                    {item.badge}
-                  </span>
-                )}
-              </motion.button>
-            ),
-          )}
+              </NavLink>
+            </motion.div>
+          ))}
         </nav>
 
         {/* System Status */}
@@ -246,34 +197,29 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <ThemeToggleButton />
-
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             {/* Left Section */}
-            
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
               <button
                 onClick={toggleSidebar}
                 className="p-2 rounded-lg hover:bg-popover/50 transition-colors"
+                aria-label="Toggle sidebar"
               >
                 <Bars3Icon className="w-5 h-5 text-primary" />
               </button>
-
-              <div>
-                <h1 className="text-xl font-bold text-foreground">
-                  Lab Interpretation Dashboard
-                </h1>
-             
-              </div>
+              <h1 className="font-bold text-foreground text-base sm:text-lg md:text-xl truncate max-w-[60vw] sm:max-w-none">Lab Interpretation Dashboard</h1>
             </div>
 
             {/* Center Section - Search */}
-            <div className="flex-1 max-w-md mx-8">
+            <div className="flex-1 max-w-md mx-2 sm:mx-8 hidden md:block">
               <div className="relative">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary" />
                 <input
                   type="text"
+                  aria-label="Search"
                   placeholder="Search patients, reports, AI insights..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-background border border-medical-glass-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/50 focus:border-medical-blue transition-all"
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -286,37 +232,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
 
             {/* Right Section */}
-            
-            <div className="flex items-center gap-3">
-
-
-              {/* Language Toggle */}
-              {/* <LanguageToggle /> */}
-               {/* Logout Button */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <ThemeToggleButton />
               <button
                 onClick={handleLogout}
-                className="ml-4 px-3 py-1 rounded-lg bg-destructive text-white text-sm font-semibold hover:bg-destructive/80 transition"
+                className="ml-2 px-3 py-1 rounded-lg bg-destructive text-white text-sm font-semibold hover:bg-destructive/80 transition"
                 title="Logout"
               >
                 Logout
               </button>
-              {/* User Profile */}
-              {/* User Profile */}
-              <div className="text-right">
+              <div className="text-right hidden md:block">
                 <div className="text-sm font-medium text-foreground">
                   {userTitle}. {userFullName}
                 </div>
-                {/* Theme Toggle Button */}
               </div>
               <div className="w-8 h-8 rounded-full bg-gradient-to-r from-medical-teal to-medical-purple flex items-center justify-center">
                 <span className="text-sm font-bold text-foreground">{userTitle}</span>
               </div>
-             
             </div>
           </div>
-
-
-
         </motion.header>
 
         {/* Page Content */}
@@ -326,17 +260,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            {children}
+            <Suspense fallback={<div className="space-y-4"><div className="h-6 w-40 bg-muted animate-pulse rounded" /><div className="h-40 bg-muted animate-pulse rounded" /><div className="h-40 bg-muted animate-pulse rounded" /></div>}>
+              {children ?? <Outlet />}
+            </Suspense>
           </motion.div>
         </main>
       </div>
 
       {/* Background Effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 hidden md:block">
         {/* Neural Network Pattern */}
         <div className="absolute inset-0 neural-bg opacity-10" />
-
-
 
         {/* Gradient Orbs */}
         <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-radial from-medical-blue/10 to-transparent rounded-full blur-3xl" />

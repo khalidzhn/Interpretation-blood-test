@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeftIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useNavigate, useParams } from "react-router-dom";
+import { getBackendUrl } from "@/utils/backend";
 type LabResult = {
   testName: string;
   value: string | number;
@@ -34,7 +35,7 @@ const LabReportDemo = () => {
 
   useEffect(() => {
     console.log("labResultId:", labResultId);
-    fetch(`http://backend-dev.eba-jfrvuvms.us-west-2.elasticbeanstalk.com/lab-result/${labResultId}`)
+    fetch(`${getBackendUrl()}/lab-result/${labResultId}`)
       .then((res) => res.json())
       .then((data) => {
         console.log("Fetched data:", data);

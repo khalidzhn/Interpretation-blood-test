@@ -25,21 +25,22 @@ useEffect(() => {
     },
   })
     .then(res => {
-      if (!res.ok) throw new Error(`Error: ${res.status}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch hospitals`);
       return res.json();
     })
     .then(data => {
+      console.log("Hospital response data:", data);
       // Map max_users to maxUsers for all hospitals
       const hospitalsArr = (Array.isArray(data) ? data : data.hospitals).map((h: any) => ({
         ...h,
-        users: h.users,
-        maxUsers: h.max_users,   // <-- map max_users to maxUsers
-
+        users: h.num_users,
+        maxUsers: h.max_users,
       }));
+      console.log("Processed hospitals:", hospitalsArr);
       setHospitals(hospitalsArr);
     })
     .catch(err => {
-      console.error("Failed to fetch hospitals:", err);
+      console.error("Failed to fetch hospitals:", err.message || err);
     });
 }, []);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -443,4 +444,4 @@ const handleEditHospital = async () => {
   );
 };
 
-export default Hospitals;   
+export default Hospitals;

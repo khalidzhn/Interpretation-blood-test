@@ -16,16 +16,32 @@ const Login: React.FC = () => {
     setError(null);
     try {
       const body = new URLSearchParams({
+        grant_type: "password",
         username: email,
         password: password,
+        scope: "",
+        client_id: "",
+        client_secret: "",
       }).toString();
 
-      const res = await fetch(`${getBackendUrl()}/token`, {
+      const backendUrl = getBackendUrl();
+      const res = await fetch(`${backendUrl}/token`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body,
+        credentials: "include",
       });
-      if (!res.ok) throw new Error("Invalid credentials");
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Invalid email or password");
+        } else if (res.status === 422) {
+          throw new Error("Invalid request format");
+        } else {
+          throw new Error(`Server error: ${res.status}`);
+        }
+      }
+
       const data = await res.json();
       // Save token in localStorage
       localStorage.setItem("access_token", data.access_token);
@@ -33,7 +49,19 @@ const Login: React.FC = () => {
       // Redirect to home page
       navigate("/");
     } catch (err: any) {
-      setError(err.message || "Login failed");
+      let errorMessage = "Login failed";
+
+      if (err instanceof TypeError) {
+        if (err.message.includes("Failed to fetch")) {
+          errorMessage = "Cannot connect to server. Please check your internet connection and try again.";
+        } else {
+          errorMessage = err.message;
+        }
+      } else {
+        errorMessage = err.message || "Login failed";
+      }
+
+      setError(errorMessage);
       setLoading(false);
     }
   };

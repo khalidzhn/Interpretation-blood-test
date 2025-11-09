@@ -45,7 +45,10 @@ useEffect(() => {
         fetch(`${getBackendUrl()}/hospitals/`, {
             headers: { Authorization: `Bearer ${token}` },
         })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
             .then(data => {
                 const hospitalsArr = (Array.isArray(data) ? data : data.hospitals).map((h: any) => ({
                     id: h.id,
@@ -54,6 +57,9 @@ useEffect(() => {
                     clinics: h.clinics || [],
                 }));
                 setHospitals(hospitalsArr);
+            })
+            .catch(err => {
+                console.error("Failed to fetch hospitals in Users page:", err);
             });
     }, []);
     const clinics =
@@ -67,12 +73,16 @@ useEffect(() => {
 const fetchUsers = () => {
     const token = localStorage.getItem("access_token");
     setLoading(true);
+    setError(null);
     fetch(`${getBackendUrl()}/users/`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
     })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch users`);
+            return res.json();
+        })
         .then(data => {
             let usersArr = Array.isArray(data) ? data : data.users;
             usersArr = usersArr.map((u: any) => ({
@@ -83,7 +93,7 @@ const fetchUsers = () => {
             setLoading(false);
         })
         .catch(err => {
-            setError(err.message);
+            setError(err.message || "Failed to load users. Please check if the backend is running.");
             setLoading(false);
         });
 };

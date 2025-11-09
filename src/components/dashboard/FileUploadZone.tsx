@@ -7,7 +7,7 @@ import {
   CheckCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+import { getBackendUrl } from "@/utils/backend";
 
 interface FileUploadZoneProps {
   onFileUpload?: (files: File[]) => void;
@@ -42,9 +42,9 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   ];
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const uploadToBackend = async (file: File, patientId: string, assignedDoctorId: string) => {
+    const backendUrl = getBackendUrl();
     const formData = new FormData();
     formData.append("file", file);
     formData.append("patient_id", patientId);
