@@ -359,7 +359,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask about medical data, lab results..."
-              className="w-full px-4 py-2 bg-medical-dark/50 border border-medical-glass-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/50 focus:border-medical-blue transition-all"
+              className="w-full px-4 py-2 bg-medical-dark text-white placeholder-gray-400 border border-medical-glass-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/50 focus:border-medical-blue transition-all"
             />
             <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
               <div className="w-1 h-1 rounded-full bg-medical-blue animate-neural-pulse" />

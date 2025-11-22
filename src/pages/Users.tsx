@@ -249,24 +249,27 @@ const fetchUsers = () => {
                                                 <td className="p-3">{user.hospital || "-"}</td>
                                                 <td className="p-3">{user.clinic || "-"}</td>
                                                 <td className="p-3">
-                                                    <td className="p-3">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleToggleActive(user.uuid, !!user.active)}
-                                                            className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${user.active ? "bg-green-500" : "bg-gray-300"
+                                                                                             <div className="flex items-center gap-3">
+                                                    <button
+                                                        type="button"
+                                                        role="switch"
+                                                        aria-checked={!!user.active}
+                                                        onClick={() => handleToggleActive(user.uuid, !!user.active)}
+                                                        className={`relative inline-flex flex-shrink-0 h-6 w-11 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${user.active ? "bg-green-500" : "bg-gray-300"
+                                                            }`}
+                                                        aria-label={user.active ? "Disable user" : "Enable user"}
+                                                    >
+                                                        <span className="sr-only">{user.active ? "Disable user" : "Enable user"}</span>
+                                                        <span
+                                                            aria-hidden="true"
+                                                            className={`pointer-events-none inline-block h-5 w-5 transform bg-white rounded-full shadow transition-transform duration-200 ease-in-out ${user.active ? "translate-x-5" : "translate-x-0"
                                                                 }`}
-                                                            aria-pressed={!!user.active}
-                                                            aria-label={user.active ? "Disable user" : "Enable user"}
-                                                        >
-                                                            <span
-                                                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${user.active ? "translate-x-5" : "translate-x-1"
-                                                                    }`}
-                                                            />
-                                                        </button>
-                                                        <span className={`ml-2 text-xs font-semibold ${user.active ? "text-green-600" : "text-gray-500"}`}>
-                                                            {user.active ? "Enabled" : "Disabled"}
-                                                        </span>
-                                                    </td>
+                                                        />
+                                                    </button>
+                                                    <span className={`text-xs font-semibold ${user.active ? "text-green-600" : "text-gray-500"}`}>
+                                                        {user.active ? "Enabled" : "Disabled"}
+                                                    </span>
+                                                </div> 
                                                 </td>
                                             </tr>
                                         ))

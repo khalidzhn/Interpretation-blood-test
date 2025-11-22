@@ -9,11 +9,9 @@ import {
   UsersIcon,
   CogIcon,
   BellIcon,
-  MagnifyingGlassIcon,
   SparklesIcon,
   ShieldCheckIcon,
   CloudIcon,
-  BoltIcon,
 } from "@heroicons/react/24/outline";
 import LanguageToggle from "./LanguageToggle";
 import Header from "@/components/Header";
@@ -72,12 +70,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     { id: "summary-metrics", label: "Summary Metrics", icon: ChartBarIcon, href: "/summary-metrics" },
   ]), []);
 
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  useEffect(() => {
-    const id = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(id);
-  }, [search]);
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen(prev => !prev);
@@ -210,26 +202,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <h1 className="font-bold text-foreground text-base sm:text-lg md:text-xl truncate max-w-[60vw] sm:max-w-none">Lab Interpretation Dashboard</h1>
             </div>
 
-            {/* Center Section - Search */}
-            <div className="flex-1 max-w-md mx-2 sm:mx-8 hidden md:block">
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary" />
-                <input
-                  type="text"
-                  aria-label="Search"
-                  placeholder="Search patients, reports, AI insights..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-background border border-medical-glass-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/50 focus:border-medical-blue transition-all"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="flex items-center gap-1">
-                    <BoltIcon className="w-3 h-3 text-medical-amber" />
-                    <span className="text-xs text-medical-amber">AI</span>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Right Section */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">

@@ -142,7 +142,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
               <label className="block text-sm font-medium mb-1 text-medical-blue">Patient ID</label>
               <input
                 type="text"
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-medical-blue"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-medical-blue focus:border-medical-blue"
                 value={patientId}
                 onChange={e => setPatientId(e.target.value)}
                 placeholder="Enter Patient ID"
@@ -151,7 +151,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
             <div className="mb-6">
               <label className="block text-sm font-medium mb-1 text-medical-blue">Assigned Doctor</label>
               <select
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-medical-blue"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-medical-blue focus:border-medical-blue"
                 value={assignedDoctor}
                 onChange={e => setAssignedDoctor(e.target.value)}
               >

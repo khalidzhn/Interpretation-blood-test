@@ -29,6 +29,7 @@ interface PatientCase {
   };
 }
 interface AnalysisResult {
+  uuid: string;
   patient_id: string;
   pdf_filename: string;
   patient_name?: string;
@@ -68,18 +69,25 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
     }
     const backendUrl = getBackendUrl();
     fetch(`${backendUrl}/analysis-results/`, {
+      method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
     })
       .then((res) => {
         if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem("access_token");
+            navigate("/login");
+            throw new Error("Session expired. Please log in again.");
+          }
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         return res.json();
       })
       .then((data) => {
-        setAnalysisResults(Array.isArray(data) ? data : []);
+        setAnalysisResults(Array.isArray(data) ? data : data.results || []);
         setLoading(false);
       })
       .catch((err) => {
@@ -100,13 +108,17 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
         return "medical-blue";
     }
   };
+  const frontendUrl =
+    (import.meta.env?.VITE_FRONTEND_URL as string | undefined) || "";
 
   const toggleExpanded = (caseId: string) => {
     setExpandedCase(expandedCase === caseId ? null : caseId);
   };
 
-  const handleViewFullReport = (patientId: string) => {
-    window.location.href = `http://interpretation-frontend-dev-bucket.s3-website-us-west-2.amazonaws.com/lab-report-demo/${patientId}`;
+  const handleViewFullReport = (uuid: string) => {
+    const labReportPath = `/lab-report-demo/${uuid}`;
+    // Use router navigation if available:
+    navigate(labReportPath);
   };
   return (
     <div className={className}>
@@ -240,7 +252,7 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
                       <div className="mt-4 flex gap-2">
                         <button
                           className="px-3 py-1 bg-medical-blue hover:bg-medical-blue/80 text-white rounded text-xs transition-colors"
-                          onClick={() => handleViewFullReport(patient.patient_id)}
+                          onClick={() => handleViewFullReport(patient.uuid)}
                         >
                           View Full Report
                         </button>

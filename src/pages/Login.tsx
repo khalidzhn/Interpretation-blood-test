@@ -84,7 +84,7 @@ const Login: React.FC = () => {
             <input
               type="email"
               required
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               value={email}
               onChange={e => setEmail(e.target.value)}
               autoComplete="username"
@@ -95,7 +95,7 @@ const Login: React.FC = () => {
             <input
               type="password"
               required
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               value={password}
               onChange={e => setPassword(e.target.value)}
               autoComplete="current-password"

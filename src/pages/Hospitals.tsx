@@ -185,7 +185,7 @@ const handleEditHospital = async () => {
               <input
                 type="text"
                 placeholder="Search hospitals..."
-                className="px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full md:w-64"
+                className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary w-full md:w-64"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -299,7 +299,7 @@ const handleEditHospital = async () => {
                   <label className="block text-sm font-medium mb-1 text-primary">Hospital Name</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                     value={newHospitalName}
                     onChange={e => setNewHospitalName(e.target.value)}
                   />
@@ -309,7 +309,7 @@ const handleEditHospital = async () => {
                   <input
                     type="number"
                     min={1}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                     value={newMaxUsers}
                     onChange={e => setNewMaxUsers(Number(e.target.value))}
                   />
@@ -319,7 +319,7 @@ const handleEditHospital = async () => {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground"
+                      className="flex-1 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500"
                       value={newClinicName}
                       onChange={e => setNewClinicName(e.target.value)}
                       placeholder="Clinic name"
@@ -381,7 +381,7 @@ const handleEditHospital = async () => {
                   <input
                     type="number"
                     min={1}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                     value={editMaxUsers}
                     onChange={e => setEditMaxUsers(Number(e.target.value))}
                   />
@@ -391,7 +391,7 @@ const handleEditHospital = async () => {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground"
+                      className="flex-1 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500"
                       value={editClinicName}
                       onChange={e => setEditClinicName(e.target.value)}
                       placeholder="Clinic name"
