@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 // https://vitejs.dev/config/
-const backendUrl = process.env.VITE_BACKEND_URL || "http://backend-dev.eba-jfrvuvms.us-west-2.elasticbeanstalk.com";
+const backendUrl = process.env.VITE_BACKEND_URL || "https://api.baseerah-ai.com";
 
 export default defineConfig(({ mode }) => ({
   server: {
