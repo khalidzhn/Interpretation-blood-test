@@ -45,10 +45,6 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({
     setCurrentLanguage(language.code);
     setIsOpen(false);
     onLanguageChange?.(language);
-
-    // Apply RTL/LTR direction to the document
-    document.documentElement.dir = language.direction;
-    document.documentElement.lang = language.code;
   };
 
   const toggleDropdown = () => {

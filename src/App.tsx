@@ -6,12 +6,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import Index from "./pages/Index";
 import LabReportDemo from "./pages/LabReportDemo";
+import GenomicReport from "./pages/GenomicReport";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Users from "./pages/Users";
 import SummaryMetricsPage from "./pages/SummaryMetricsPage";
 import Hospitals from "./pages/Hospitals";
 import Landing from "./pages/Landing";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -32,8 +34,10 @@ const App = () => {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/info" element={<Landing />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/" element={<Index />} />
             <Route path="/lab-report-demo/:labResultId" element={<LabReportDemo />} />
+            <Route path="/genomic-report/:id" element={<GenomicReport />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/users" element={<Users />} />
             <Route path="/summary-metrics" element={<SummaryMetricsPage />} />

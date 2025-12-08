@@ -9,6 +9,7 @@ import {
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
 import { ThemeToggleButton } from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
@@ -411,6 +412,34 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
+      {/* Contact Us Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-card/50 border-y border-medical-glass-border">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center space-y-8"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold">Get in Touch</h2>
+            <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+              Have questions or need support? We'd love to hear from you. Send us an inquiry and our team will get back to you shortly.
+            </p>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate("/contact")}
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-gradient-to-r from-medical-blue to-medical-teal text-white font-bold text-lg hover:shadow-xl hover:shadow-medical-blue/50 transition-all"
+            >
+              Send us a Message
+              <ArrowRightIcon className="w-5 h-5" />
+            </motion.button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Footer CTA */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-medical-blue/10 via-medical-teal/10 to-medical-purple/10 border-t border-medical-glass-border">
         <div className="max-w-4xl mx-auto text-center space-y-8">
@@ -450,22 +479,7 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-medical-glass-border py-12 px-4 sm:px-6 lg:px-8 bg-card/30">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-medical-blue to-medical-teal flex items-center justify-center">
-              <SparklesIcon className="w-5 h-5 text-white" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              © 2025 Baseerah Technologies. All rights reserved.
-            </p>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Transforming Healthcare with AI-Powered Insights
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

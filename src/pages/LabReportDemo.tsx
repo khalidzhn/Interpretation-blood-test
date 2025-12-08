@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeftIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useNavigate, useParams } from "react-router-dom";
 import { getBackendUrl } from "@/utils/backend";
+import LanguageToggle from "@/components/dashboard/LanguageToggle";
 type LabResult = {
   testName: string;
   value: string | number;
@@ -32,6 +33,7 @@ const LabReportDemo = () => {
   const [riskLevel, setRiskLevel] = useState<string>("");
   const [aiClinicalInterpretation, setAiClinicalInterpretation] = useState<any>(null);
   const [intelligentPatientReport, setIntelligentPatientReport] = useState<any>(null);
+  const [language, setLanguage] = useState<string>("en");
 
   useEffect(() => {
     console.log("labResultId:", labResultId);
@@ -359,10 +361,13 @@ const LabReportDemo = () => {
                     AI-Personalized
                   </span>
                 </div>
-                <div className="text-right text-sm text-gray-600">
-                  <div>📱 Baseerah Mobile App</div>
-                  <div>🕒 24 Jun 2025, 7:18 PM</div>
-                  <div>✅ Read Receipt: 7:23 PM</div>
+                <div className="flex items-center gap-6">
+                  <LanguageToggle onLanguageChange={(lang) => setLanguage(lang.code)} />
+                  <div className="text-right text-sm text-gray-600">
+                    <div>📱 Baseerah Mobile App</div>
+                    <div>🕒 24 Jun 2025, 7:18 PM</div>
+                    <div>✅ Read Receipt: 7:23 PM</div>
+                  </div>
                 </div>
               </div>
               {/* Personalized Summary Section */}
@@ -377,8 +382,8 @@ const LabReportDemo = () => {
                     </span>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {/* English Version */}
+                  {/* English Version */}
+                  {language === "en" && (
                     <div className="p-4 bg-blue-50 rounded-lg">
                       <div className="text-sm font-medium text-blue-600 mb-3 flex items-center gap-2">
                         🇺🇸 ENGLISH REPORT
@@ -416,24 +421,26 @@ const LabReportDemo = () => {
                           </div>
                         ))}
                         {intelligentPatientReport?.patientActionPlan && (
-  <div className="bg-green-50 p-3 rounded">
-    <p>
-      <strong>🎯 Your Action Plan:</strong>
-    </p>
-    <ul className="mt-2 space-y-1 text-xs">
-      {intelligentPatientReport.patientActionPlan.map(
-        (action: any, idx: number) => (
-          <li key={idx} dangerouslySetInnerHTML={{ __html: `• ${action.actionEn}` }} />
-        )
-      )}
-    </ul>
-  </div>
-)}
+                          <div className="bg-green-50 p-3 rounded">
+                            <p>
+                              <strong>🎯 Your Action Plan:</strong>
+                            </p>
+                            <ul className="mt-2 space-y-1 text-xs">
+                              {intelligentPatientReport.patientActionPlan.map(
+                                (action: any, idx: number) => (
+                                  <li key={idx} dangerouslySetInnerHTML={{ __html: `• ${action.actionEn}` }} />
+                                )
+                              )}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
+                  )}
 
-                    {/* Arabic Version */}
-                    <div className="p-4 bg-teal-50 rounded-lg" dir="rtl">
+                  {/* Arabic Version */}
+                  {language === "ar" && (
+                    <div className="p-4 bg-teal-50 rounded-lg" dir={language === "ar" ? "rtl" : "ltr"}>
                       <div className="text-sm font-medium text-teal-600 mb-3 flex items-center gap-2 justify-end">
                         <span className="text-xs bg-teal-200 px-2 py-0.5 rounded">
                           مُخصص لك
@@ -468,25 +475,24 @@ const LabReportDemo = () => {
                               {test.storyAR}
                             </p>
                           </div>
-
                         ))}
-{intelligentPatientReport?.patientActionPlan && (
-  <div className="bg-green-50 p-3 rounded">
-    <p>
-      <strong>🎯 خطة العلاج:</strong>
-    </p>
-    <ul className="mt-2 space-y-1 text-xs">
-      {intelligentPatientReport.patientActionPlan.map(
-        (action: any, idx: number) => (
-          <li key={idx} dangerouslySetInnerHTML={{ __html: `• ${action.actionAr}` }} />
-        )
-      )}
-    </ul>
-  </div>
-)}
+                        {intelligentPatientReport?.patientActionPlan && (
+                          <div className="bg-green-50 p-3 rounded">
+                            <p>
+                              <strong>🎯 خطة العلاج:</strong>
+                            </p>
+                            <ul className="mt-2 space-y-1 text-xs">
+                              {intelligentPatientReport.patientActionPlan.map(
+                                (action: any, idx: number) => (
+                                  <li key={idx} dangerouslySetInnerHTML={{ __html: `• ${action.actionAr}` }} />
+                                )
+                              )}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

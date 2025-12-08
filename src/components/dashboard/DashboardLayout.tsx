@@ -13,8 +13,8 @@ import {
   ShieldCheckIcon,
   CloudIcon,
 } from "@heroicons/react/24/outline";
-import LanguageToggle from "./LanguageToggle";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import * as jwtDecodeLib from "jwt-decode";
 import { useNavigate, NavLink, Outlet } from "react-router-dom";
 import { ThemeToggleButton } from "@/components/Header";
@@ -43,7 +43,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("access_token");
-    navigate("/login");
+    navigate("/info");
   }, [navigate]);
 
   let userTitle = "";
@@ -226,16 +226,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </motion.header>
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className="p-6 flex flex-col min-h-screen">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex-grow"
           >
             <Suspense fallback={<div className="space-y-4"><div className="h-6 w-40 bg-muted animate-pulse rounded" /><div className="h-40 bg-muted animate-pulse rounded" /><div className="h-40 bg-muted animate-pulse rounded" /></div>}>
               {children ?? <Outlet />}
             </Suspense>
           </motion.div>
+          <Footer />
         </main>
       </div>
 

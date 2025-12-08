@@ -158,7 +158,7 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
           return (
 
             <motion.div
-              key={patient.patient_id}
+              key={patient.uuid || `patient-${index}`}
               className="glass-card rounded-xl border border-medical-glass-border overflow-hidden"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -166,8 +166,8 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
             >
               <div
                 className="p-4 cursor-pointer hover:bg-medical-glass/30 transition-colors"
-                onClick={() => toggleExpanded(patient.patient_id)}
-                aria-expanded={expandedCase === patient.patient_id}
+                onClick={() => toggleExpanded(patient.uuid)}
+                aria-expanded={expandedCase === patient.uuid}
 
               >
                 <div className="flex items-center justify-between">
@@ -185,7 +185,7 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
                     </div>
                   </div>
                   <motion.div
-                    animate={{ rotate: expandedCase === patient.patient_id ? 90 : 0 }}
+                    animate={{ rotate: expandedCase === patient.uuid ? 90 : 0 }}
                     transition={{ duration: 0.2 }}
                   >
                     <ChevronRightIcon className="w-5 h-5 text-muted-foreground" />
@@ -195,7 +195,7 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
 
               {/* Expanded Details */}
               <AnimatePresence>
-                {expandedCase === patient.patient_id && (
+                {expandedCase === patient.uuid && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
@@ -213,7 +213,7 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
                           <ul className="space-y-1">
                             {Array.isArray(patient.keyFindings) && patient.keyFindings.length > 0 ? (
                               patient.keyFindings.map((point, idx) => (
-                                <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                <li key={`${patient.uuid}-finding-${idx}`} className="text-sm text-muted-foreground flex items-start gap-2">
                                   <span className="w-1 h-1 rounded-full bg-medical-blue mt-2 flex-shrink-0" />
                                   {point}
                                 </li>

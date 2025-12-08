@@ -35,15 +35,20 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [patientId, setPatientId] = useState("");
   const [assignedDoctor, setAssignedDoctor] = useState("");
+  const [analysisType, setAnalysisType] = useState("general");
   const doctorOptions = [
     { value: "dr_ahmed", label: "Dr. Ahmed" },
     { value: "dr_sara", label: "Dr. Sara" },
     { value: "dr_john", label: "Dr. John" },
   ];
+  const analysisOptions = [
+    { value: "general", label: "General Analysis" },
+    { value: "genomics", label: "Genomics Analysis" },
+  ];
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
 
-  const uploadToBackend = async (file: File, patientId: string, assignedDoctorId: string) => {
+  const uploadToBackend = async (file: File, patientId: string, assignedDoctorId: string, analyzeType: string) => {
     const backendUrl = getBackendUrl();
     const formData = new FormData();
     formData.append("file", file);
@@ -51,11 +56,24 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     formData.append("assigned_doctor_id", "3");
 
     try {
+      // First upload the file
       const response = await fetch(`${backendUrl}/upload-pdf/`, {
         method: "POST",
         body: formData,
       });
       if (!response.ok) throw new Error("Upload failed");
+
+      // If genomics analysis is selected, call the filter-excel endpoint
+      if (analyzeType === "genomics") {
+        const filterFormData = new FormData();
+        filterFormData.append("file", file);
+        const filterResponse = await fetch(`${backendUrl}/filter-excel/`, {
+          method: "POST",
+          body: filterFormData,
+        });
+        if (!filterResponse.ok) throw new Error("Filter failed");
+      }
+
       return true;
     } catch (error) {
       return false;
@@ -67,7 +85,6 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       uploadedFiles.every(f => f.status !== "uploading")
     ) {
       onUploadComplete?.();
-      setShowPatientModal(true);
       setUploadedFiles([]);
     }
   }, [uploadedFiles, onUploadComplete]);
@@ -102,13 +119,13 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "uploading":
-        return "medical-blue";
+        return "var(--medical-blue)";
       case "success":
-        return "medical-green";
+        return "var(--medical-green)";
       case "error":
-        return "medical-red";
+        return "var(--medical-red)";
       default:
-        return "medical-blue";
+        return "var(--medical-blue)";
     }
   };
 
@@ -161,6 +178,18 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                 ))}
               </select>
             </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-1 text-medical-blue">Analysis Type</label>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-medical-blue focus:border-medical-blue"
+                value={analysisType}
+                onChange={e => setAnalysisType(e.target.value)}
+              >
+                {analysisOptions.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
             <div className="flex justify-end gap-2">
               <button
                 className="px-4 py-2 rounded-lg bg-medical-blue text-white font-semibold hover:bg-medical-blue/90"
@@ -178,7 +207,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
 
                   setUploadedFiles((prev) => [...prev, ...newFiles]);
                   for (const uploadFile of newFiles) {
-                    const success = await uploadToBackend(uploadFile.file, patientId, assignedDoctor);
+                    const success = await uploadToBackend(uploadFile.file, patientId, assignedDoctor, analysisType);
                     setUploadedFiles((prev) =>
                       prev.map((f) =>
                         f.id === uploadFile.id
@@ -192,6 +221,9 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                     );
                   }
                   setPendingFiles([]);
+                  setPatientId("");
+                  setAssignedDoctor("");
+                  setAnalysisType("general");
                 }}
               >
                 Save
@@ -201,6 +233,9 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                 onClick={() => {
                   setShowPatientModal(false);
                   setPendingFiles([]);
+                  setPatientId("");
+                  setAssignedDoctor("");
+                  setAnalysisType("general");
                 }}              >
                 Cancel
               </button>
@@ -389,7 +424,8 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                     </div>
                     <div className="h-1 bg-background rounded-full overflow-hidden">
                       <motion.div
-                        className={`h-full bg-${getStatusColor(uploadedFile.status)}`}
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: getStatusColor(uploadedFile.status) }}
                         initial={{ width: 0 }}
                         animate={{ width: `${uploadedFile.progress}%` }}
                         transition={{ duration: 0.3 }}
