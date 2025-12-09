@@ -14,6 +14,7 @@ import SummaryMetricsPage from "./pages/SummaryMetricsPage";
 import Hospitals from "./pages/Hospitals";
 import Landing from "./pages/Landing";
 import Contact from "./pages/Contact";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -32,16 +33,62 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/info" element={<Landing />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/" element={<Index />} />
-            <Route path="/lab-report-demo/:labResultId" element={<LabReportDemo />} />
-            <Route path="/genomic-report/:id" element={<GenomicReport />} />
+
+            {/* Protected Routes */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lab-report-demo/:labResultId"
+              element={
+                <ProtectedRoute>
+                  <LabReportDemo />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/genomic-report/:id"
+              element={
+                <ProtectedRoute>
+                  <GenomicReport />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <Users />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/summary-metrics"
+              element={
+                <ProtectedRoute>
+                  <SummaryMetricsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospitals"
+              element={
+                <ProtectedRoute>
+                  <Hospitals />
+                </ProtectedRoute>
+              }
+            />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="/users" element={<Users />} />
-            <Route path="/summary-metrics" element={<SummaryMetricsPage />} />
-            <Route path="/hospitals" element={<Hospitals />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
