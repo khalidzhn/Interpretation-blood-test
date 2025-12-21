@@ -229,11 +229,7 @@ export function ClinicalContextSection({ data }: ClinicalContextSectionProps) {
                         }
                         className="text-xs"
                       >
-                        {variant.tier === "Tier 1"
-                          ? "🔴 Pathogenic"
-                          : variant.tier === "Tier 2"
-                            ? "🟡 Likely Path."
-                            : "⚪ VUS"}
+                        {variant.clinicalSignificance}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">

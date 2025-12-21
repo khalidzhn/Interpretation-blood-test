@@ -33,6 +33,8 @@ interface AnalysisResult {
   patient_id: string;
   pdf_filename: string;
   patient_name?: string;
+  analysis_type?: string;
+  is_processed?: boolean;
   DoctorInterpretation: string;
   AutoReferralBlock: {
     needed: boolean;
@@ -170,12 +172,38 @@ const MultiPatientOverview: React.FC<MultiPatientOverviewProps> = ({
                 aria-expanded={expandedCase === patient.uuid}
 
               >
-                <div className="flex items-center justify-between">
-                  <div>
-<h4 className="font-semibold text-foreground">
-  {patient.patient_name || patient.pdf_filename}
-</h4>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="font-semibold text-foreground">
+                        {patient.patient_name || patient.pdf_filename}
+                      </h4>
+                      {patient.analysis_type && (
+                        <div
+                          className={`text-xs px-2 py-1 rounded font-medium ${
+                            patient.analysis_type.toLowerCase() === "genomics"
+                              ? "bg-medical-green/30 text-medical-green"
+                              : patient.analysis_type.toLowerCase() === "routine"
+                                ? "bg-medical-blue/30 text-medical-blue"
+                                : "bg-medical-teal/30 text-medical-teal"
+                          }`}
+                        >
+                          {patient.analysis_type}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center gap-3 mt-1">
+                      {patient.is_processed === false && (
+                        <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-medical-amber/20 text-medical-amber">
+                          <span className="font-medium">● new</span>
+                        </div>
+                      )}
+                      {patient.is_processed === true && (
+                        <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-medical-green/20 text-medical-green">
+                          <CheckCircleIcon className="w-3 h-3" />
+                          <span className="font-medium">processed</span>
+                        </div>
+                      )}
                       <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${statusBg}`}>
                         <span className="capitalize">{patient.IntelligenceHubCard.riskLevel} Risk</span>
                       </div>

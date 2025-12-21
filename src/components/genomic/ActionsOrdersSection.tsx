@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import {
   FlaskConical,
@@ -15,31 +16,42 @@ import {
   Plus,
   Check,
   Clock,
+  Edit2,
+  X,
+  Trash2,
 } from "lucide-react";
+
+interface AddedVariantAction {
+  variant: any;
+  actionType: string;
+  id: string;
+}
 
 interface ActionsOrdersSectionProps {
   data: any;
+  addedVariantActions?: AddedVariantAction[];
+  onRemoveVariantAction?: (actionId: string) => void;
+  onUpdateVariantAction?: (actionId: string, newActionType: string) => void;
 }
 
-export function ActionsOrdersSection({ data }: ActionsOrdersSectionProps) {
-  const variants = data?.variants || [];
-  const [confirmatory, setConfirmatory] = useState<Map<string, boolean>>(
-    new Map()
-  );
-  const [referrals, setReferrals] = useState<Map<string, boolean>>(new Map());
+const TEST_OPTIONS = [
+  { value: "sanger", label: "Sanger Sequencing" },
+  { value: "blood-test", label: "Blood Test" },
+  { value: "peripheral-blood", label: "Peripheral Blood Smear" },
+  { value: "parental-testing", label: "Parental Testing" },
+  { value: "hemoglobin", label: "Hemoglobin Electrophoresis" },
+  { value: "counseling", label: "Genetic Counseling" },
+  { value: "cancer-risk", label: "Cancer Risk Assessment" },
+];
+
+export function ActionsOrdersSection({
+  data,
+  addedVariantActions = [],
+  onRemoveVariantAction,
+  onUpdateVariantAction,
+}: ActionsOrdersSectionProps) {
+  const [isEditingActions, setIsEditingActions] = useState(false);
   const [reanalysisEnabled, setReanalysisEnabled] = useState(false);
-
-  const toggleConfirmatory = (gene: string) => {
-    const newMap = new Map(confirmatory);
-    newMap.set(gene, !newMap.get(gene));
-    setConfirmatory(newMap);
-  };
-
-  const toggleReferral = (type: string) => {
-    const newMap = new Map(referrals);
-    newMap.set(type, !newMap.get(type));
-    setReferrals(newMap);
-  };
 
   const cardVariants = {
     hidden: { opacity: 0, y: 15 },
@@ -53,78 +65,94 @@ export function ActionsOrdersSection({ data }: ActionsOrdersSectionProps) {
     }),
   };
 
-  const pathogenicVariants = variants.filter(
-    (v: any) => v.tier === "Tier 1" || v.tier === "Tier 2"
-  );
+  const getTestLabel = (value: string) => {
+    return TEST_OPTIONS.find((opt) => opt.value === value)?.label || value;
+  };
 
   let cardIndex = 0;
 
   return (
     <div className="space-y-6">
-      {/* Auto-generated Checklists */}
-      <motion.div custom={cardIndex++} variants={cardVariants} initial="hidden" animate="visible">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-            <FlaskConical className="w-5 h-5 text-primary" />
-            Confirmatory Testing
-          </h3>
+      {/* Added Variant Actions */}
+      {addedVariantActions.length > 0 && (
+        <motion.div custom={cardIndex++} variants={cardVariants} initial="hidden" animate="visible">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <FlaskConical className="w-5 h-5 text-primary" />
+                Confirmatory Testing
+              </h3>
+              <Button
+                size="sm"
+                variant={isEditingActions ? "default" : "outline"}
+                onClick={() => setIsEditingActions(!isEditingActions)}
+                className="gap-2"
+              >
+                {isEditingActions ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Done
+                  </>
+                ) : (
+                  <>
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </>
+                )}
+              </Button>
+            </div>
 
-          <div className="space-y-4">
-            {pathogenicVariants.length > 0 ? (
-              pathogenicVariants.map((variant: any) => (
+            <div className="space-y-3">
+              {addedVariantActions.map((action) => (
                 <div
-                  key={variant.gene}
+                  key={action.id}
                   className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors"
                 >
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge
-                        variant={
-                          variant.tier === "Tier 1" ? "destructive" : "default"
-                        }
-                        className="text-xs"
-                      >
-                        {variant.tier}
-                      </Badge>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <span className="font-medium text-foreground">
-                        {variant.gene}
+                        {action.variant.gene}
                       </span>
                       <span className="text-sm text-muted-foreground font-mono">
-                        {variant.hgvs || variant.variant}
+                        {action.variant.hgvs || action.variant.variant}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Sanger sequencing confirmation recommended
-                    </p>
+                    {isEditingActions ? (
+                      <Select value={action.actionType} onValueChange={(value) => onUpdateVariantAction?.(action.id, value)}>
+                        <SelectTrigger className="w-full md:w-64">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TEST_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        {getTestLabel(action.actionType)}
+                      </p>
+                    )}
                   </div>
 
-                  <Button
-                    size="sm"
-                    onClick={() => toggleConfirmatory(variant.gene)}
-                    variant={confirmatory.get(variant.gene) ? "default" : "outline"}
-                    className="gap-2"
-                  >
-                    {confirmatory.get(variant.gene) ? (
-                      <>
-                        <Check className="w-4 h-4" /> Added
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="w-4 h-4" /> Add Sanger
-                      </>
-                    )}
-                  </Button>
+                  {isEditingActions && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onRemoveVariantAction?.(action.id)}
+                      className="gap-2 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <FlaskConical className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>No pathogenic variants found requiring confirmatory testing</p>
-              </div>
-            )}
-          </div>
-        </Card>
-      </motion.div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Referrals */}
       <motion.div custom={cardIndex++} variants={cardVariants} initial="hidden" animate="visible">
@@ -175,19 +203,10 @@ export function ActionsOrdersSection({ data }: ActionsOrdersSectionProps) {
 
                 <Button
                   size="sm"
-                  variant={referrals.get(referral.type) ? "default" : "outline"}
+                  variant="outline"
                   className="w-full gap-2"
-                  onClick={() => toggleReferral(referral.type)}
                 >
-                  {referrals.get(referral.type) ? (
-                    <>
-                      <Check className="w-4 h-4" /> Added
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" /> Add Referral
-                    </>
-                  )}
+                  <Plus className="w-4 h-4" /> Add Referral
                 </Button>
               </div>
             ))}
@@ -294,8 +313,7 @@ export function ActionsOrdersSection({ data }: ActionsOrdersSectionProps) {
           className="bg-primary hover:bg-primary/90 gap-2"
           size="sm"
         >
-          Create Tasks (
-          {confirmatory.size + referrals.size + (reanalysisEnabled ? 1 : 0)})
+          Create Tasks ({addedVariantActions.length})
         </Button>
 
         <Button variant="outline" size="sm" className="gap-2 ml-auto">

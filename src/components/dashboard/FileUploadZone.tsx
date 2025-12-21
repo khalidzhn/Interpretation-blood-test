@@ -53,29 +53,31 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     const formData = new FormData();
     formData.append("file", file);
     formData.append("patient_id", patientId);
-    formData.append("assigned_doctor_id", "3");
 
     try {
-      // First upload the file
-      const response = await fetch(`${backendUrl}/upload-pdf/`, {
+      // Choose endpoint based on analysis type
+      const endpoint = analyzeType === "genomics"
+        ? `${backendUrl}/genomics-interpretation/`
+        : `${backendUrl}/routine-interpretation/`;
+
+      console.log("Uploading to:", endpoint);
+      console.log("File info:", { fileName: file.name, fileType: file.type, fileSize: file.size, patientId, analyzeType });
+
+      const response = await fetch(endpoint, {
         method: "POST",
         body: formData,
       });
-      if (!response.ok) throw new Error("Upload failed");
 
-      // If genomics analysis is selected, call the filter-excel endpoint
-      if (analyzeType === "genomics") {
-        const filterFormData = new FormData();
-        filterFormData.append("file", file);
-        const filterResponse = await fetch(`${backendUrl}/filter-excel/`, {
-          method: "POST",
-          body: filterFormData,
-        });
-        if (!filterResponse.ok) throw new Error("Filter failed");
+      const responseText = await response.text();
+      console.log("Response status:", response.status);
+      console.log("Response body:", responseText);
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status ${response.status}: ${responseText}`);
       }
-
       return true;
     } catch (error) {
+      console.error("Upload error:", error);
       return false;
     }
   };
