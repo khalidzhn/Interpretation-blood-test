@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
   Dna,
   ExternalLink,
   Plus,
+  Check,
   Info,
   Database,
   ChevronDown,
@@ -19,6 +19,8 @@ import {
 
 interface TieredVariantAnalysisSectionProps {
   data: any;
+  onAddVariantAction?: (variant: any) => void;
+  addedVariants?: Set<string>;
 }
 
 const ACMG_CRITERIA = [
@@ -35,12 +37,11 @@ const ACMG_CRITERIA = [
 interface VariantCardProps {
   variant: any;
   index: number;
-  onAddToActions?: (variant: any, actionType: string) => void;
+  onAddToActions?: (variant: any) => void;
+  isAdded?: boolean;
 }
 
-function VariantCard({ variant, index, onAddToActions }: VariantCardProps) {
-  const [selectedAction, setSelectedAction] = useState<string>("");
-
+function VariantCard({ variant, index, onAddToActions, isAdded = false }: VariantCardProps) {
   const getCallVariant = (call: string) => {
     if (call?.includes("Pathogenic")) return "destructive";
     if (call?.includes("VUS")) return "secondary";
@@ -59,10 +60,9 @@ function VariantCard({ variant, index, onAddToActions }: VariantCardProps) {
     },
   };
 
-  const handleAddToActions = () => {
-    if (selectedAction && onAddToActions) {
-      onAddToActions(variant, selectedAction);
-      setSelectedAction("");
+  const handleToggleVariant = () => {
+    if (onAddToActions) {
+      onAddToActions(variant);
     }
   };
 
@@ -127,30 +127,30 @@ function VariantCard({ variant, index, onAddToActions }: VariantCardProps) {
             </div>
           </div>
 
-          {/* Add to Action Dropdown */}
+          {/* Add to Actions & Orders Button */}
           <div className="flex gap-2">
-            <Select value={selectedAction} onValueChange={setSelectedAction}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select action..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sanger">Sanger Sequencing</SelectItem>
-                <SelectItem value="blood-test">Blood Test</SelectItem>
-                <SelectItem value="peripheral-blood">Peripheral Blood Smear</SelectItem>
-                <SelectItem value="parental-testing">Parental Testing</SelectItem>
-                <SelectItem value="hemoglobin">Hemoglobin Electrophoresis</SelectItem>
-                <SelectItem value="counseling">Genetic Counseling</SelectItem>
-                <SelectItem value="cancer-risk">Cancer Risk Assessment</SelectItem>
-              </SelectContent>
-            </Select>
             <Button
               size="sm"
-              className="bg-primary hover:bg-primary/90 gap-2"
-              onClick={handleAddToActions}
-              disabled={!selectedAction}
+              variant={isAdded ? "default" : "default"}
+              className={cn(
+                "gap-2 font-medium",
+                isAdded
+                  ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+                  : "bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
+              )}
+              onClick={handleToggleVariant}
             >
-              <Plus className="w-4 h-4" />
-              Add
+              {isAdded ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Added
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  Add to Actions & Orders
+                </>
+              )}
             </Button>
           </div>
 
@@ -162,15 +162,21 @@ function VariantCard({ variant, index, onAddToActions }: VariantCardProps) {
 
 interface TieredVariantAnalysisSectionProps {
   data: any;
-  onAddVariantAction?: (variant: any, actionType: string) => void;
+  onAddVariantAction?: (variant: any) => void;
+  addedVariants?: Set<string>;
 }
 
 export function TieredVariantAnalysisSection({
   data,
   onAddVariantAction,
+  addedVariants = new Set(),
 }: TieredVariantAnalysisSectionProps) {
   const variants = data?.variants || [];
   const tiered = data?.tieredAnalysis || {};
+
+  const getVariantKey = (variant: any) => {
+    return `${variant.gene}-${variant.hgvs || variant.variant}`;
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -211,14 +217,20 @@ export function TieredVariantAnalysisSection({
           initial="hidden"
           animate="visible"
         >
-          {variants.map((variant: any, index: number) => (
-            <VariantCard
-              key={`${variant.gene}-${index}`}
-              variant={variant}
-              index={index}
-              onAddToActions={onAddVariantAction}
-            />
-          ))}
+          {variants.map((variant: any, index: number) => {
+            const variantKey = getVariantKey(variant);
+            const isAdded = addedVariants.has(variantKey);
+            
+            return (
+              <VariantCard
+                key={`${variant.gene}-${index}`}
+                variant={variant}
+                index={index}
+                onAddToActions={onAddVariantAction}
+                isAdded={isAdded}
+              />
+            );
+          })}
         </motion.div>
       ) : (
         <Card className="p-12 text-center">

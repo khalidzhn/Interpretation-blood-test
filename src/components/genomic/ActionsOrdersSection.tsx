@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ComboboxMulti } from "@/components/ui/combobox-multi";
 import { motion } from "framer-motion";
 import {
   FlaskConical,
@@ -23,7 +23,7 @@ import {
 
 interface AddedVariantAction {
   variant: any;
-  actionType: string;
+  actionTypes: string[];
   id: string;
 }
 
@@ -31,7 +31,7 @@ interface ActionsOrdersSectionProps {
   data: any;
   addedVariantActions?: AddedVariantAction[];
   onRemoveVariantAction?: (actionId: string) => void;
-  onUpdateVariantAction?: (actionId: string, newActionType: string) => void;
+  onUpdateVariantAction?: (actionId: string, newActionTypes: string[]) => void;
 }
 
 const TEST_OPTIONS = [
@@ -53,6 +53,14 @@ export function ActionsOrdersSection({
   const [isEditingActions, setIsEditingActions] = useState(false);
   const [reanalysisEnabled, setReanalysisEnabled] = useState(false);
 
+  // Filter added variants to only show Tier 1 and 2
+  const tier1And2AddedVariants = useMemo(() => {
+    return addedVariantActions.filter((action) => {
+      const tier = action.variant.tier || "";
+      return tier === "Tier 1" || tier === "Tier 2";
+    });
+  }, [addedVariantActions]);
+
   const cardVariants = {
     hidden: { opacity: 0, y: 15 },
     visible: (i: number) => ({
@@ -65,17 +73,20 @@ export function ActionsOrdersSection({
     }),
   };
 
-  const getTestLabel = (value: string) => {
-    return TEST_OPTIONS.find((opt) => opt.value === value)?.label || value;
+  const getTestLabels = (values: string[]) => {
+    return values.map(value => TEST_OPTIONS.find((opt) => opt.value === value)?.label || value).join(", ");
+  };
+
+  const handleVariantActionChange = (actionId: string, newActionTypes: string[]) => {
+    onUpdateVariantAction?.(actionId, newActionTypes);
   };
 
   let cardIndex = 0;
 
   return (
     <div className="space-y-6">
-      {/* Added Variant Actions */}
-      {addedVariantActions.length > 0 && (
-        <motion.div custom={cardIndex++} variants={cardVariants} initial="hidden" animate="visible">
+      {/* Confirmatory Testing - Show Tier 1 and 2 added variants */}
+      <motion.div custom={cardIndex++} variants={cardVariants} initial="hidden" animate="visible">
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
@@ -103,56 +114,60 @@ export function ActionsOrdersSection({
             </div>
 
             <div className="space-y-3">
-              {addedVariantActions.map((action) => (
-                <div
-                  key={action.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <span className="font-medium text-foreground">
-                        {action.variant.gene}
-                      </span>
-                      <span className="text-sm text-muted-foreground font-mono">
-                        {action.variant.hgvs || action.variant.variant}
-                      </span>
-                    </div>
-                    {isEditingActions ? (
-                      <Select value={action.actionType} onValueChange={(value) => onUpdateVariantAction?.(action.id, value)}>
-                        <SelectTrigger className="w-full md:w-64">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {TEST_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        {getTestLabel(action.actionType)}
-                      </p>
-                    )}
-                  </div>
-
-                  {isEditingActions && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onRemoveVariantAction?.(action.id)}
-                      className="gap-2 text-destructive hover:text-destructive"
+              {tier1And2AddedVariants.length > 0 ? (
+                tier1And2AddedVariants.map((action) => {
+                  const variant = action.variant;
+                  return (
+                    <div
+                      key={action.id}
+                      className="flex items-start justify-between p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors gap-4"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
+                          <span className="font-medium text-foreground">
+                            {variant.gene}
+                          </span>
+                          <span className="text-sm text-muted-foreground font-mono">
+                            {variant.hgvs || variant.variant}
+                          </span>
+                        </div>
+                        {isEditingActions ? (
+                          <ComboboxMulti
+                            options={TEST_OPTIONS}
+                            selected={action.actionTypes || []}
+                            onChange={(newActionTypes) => handleVariantActionChange(action.id, newActionTypes)}
+                            placeholder="Select tests..."
+                            className="w-full"
+                          />
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            {action.actionTypes && action.actionTypes.length > 0 
+                              ? getTestLabels(action.actionTypes) 
+                              : "No tests selected"}
+                          </p>
+                        )}
+                      </div>
+                      {isEditingActions && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onRemoveVariantAction?.(action.id)}
+                          className="gap-2 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No variants added yet. Use the "Add to Actions & Orders" button in the Tiered Variant Analysis section.
+                </p>
+              )}
             </div>
           </Card>
         </motion.div>
-      )}
 
       {/* Referrals */}
       <motion.div custom={cardIndex++} variants={cardVariants} initial="hidden" animate="visible">
@@ -313,7 +328,9 @@ export function ActionsOrdersSection({
           className="bg-primary hover:bg-primary/90 gap-2"
           size="sm"
         >
-          Create Tasks ({addedVariantActions.length})
+          Create Tasks ({tier1And2AddedVariants.filter((action) => 
+            action.actionTypes && action.actionTypes.length > 0
+          ).length})
         </Button>
 
         <Button variant="outline" size="sm" className="gap-2 ml-auto">

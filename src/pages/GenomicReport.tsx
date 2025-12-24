@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -19,7 +19,7 @@ interface SectionState {
 
 interface AddedVariantAction {
   variant: any;
-  actionType: string;
+  actionTypes: string[];
   id: string;
 }
 
@@ -42,24 +42,44 @@ const GenomicReport = () => {
     }));
   };
 
-  const handleAddVariantAction = (variant: any, actionType: string) => {
-    const newAction: AddedVariantAction = {
-      variant,
-      actionType,
-      id: `${variant.gene}-${actionType}-${Date.now()}`,
-    };
-    setAddedVariantActions((prev) => [...prev, newAction]);
+  const getVariantKey = (variant: any) => {
+    return `${variant.gene}-${variant.hgvs || variant.variant}`;
+  };
+
+  const handleAddVariantAction = (variant: any) => {
+    const variantKey = getVariantKey(variant);
+    const existingAction = addedVariantActions.find(
+      (action) => getVariantKey(action.variant) === variantKey
+    );
+
+    if (existingAction) {
+      // Remove if already added (toggle off)
+      handleRemoveVariantAction(existingAction.id);
+    } else {
+      // Add new variant action with empty actionTypes
+      const newAction: AddedVariantAction = {
+        variant,
+        actionTypes: [],
+        id: `${variantKey}-${Date.now()}`,
+      };
+      setAddedVariantActions((prev) => [...prev, newAction]);
+    }
   };
 
   const handleRemoveVariantAction = (actionId: string) => {
     setAddedVariantActions((prev) => prev.filter((a) => a.id !== actionId));
   };
 
-  const handleUpdateVariantAction = (actionId: string, newActionType: string) => {
+  const handleUpdateVariantAction = (actionId: string, newActionTypes: string[]) => {
     setAddedVariantActions((prev) =>
-      prev.map((a) => (a.id === actionId ? { ...a, actionType: newActionType } : a))
+      prev.map((a) => (a.id === actionId ? { ...a, actionTypes: newActionTypes } : a))
     );
   };
+
+  // Create a Set of added variant keys for easy lookup
+  const addedVariantKeys = useMemo(() => {
+    return new Set(addedVariantActions.map((action) => getVariantKey(action.variant)));
+  }, [addedVariantActions]);
 
   // Mock data - in real scenario, this would be fetched based on the ID
   const reportData = useMemo(() => ({
@@ -450,6 +470,33 @@ const GenomicReport = () => {
   "patientSummaryAR": "تُظهر نتائج الاختبارات الجينية الخاصة بك العديد من النتائج الهامة. وأهمها هو التغير في جين **HBB**، الذي يؤكد إصابتك بمرض **فقر الدم المنجلي (Sickle Cell Anemia)**. يؤثر هذا المرض على خلايا الدم الحمراء لديك. كما لديك ثلاثة تغيرات منفصلة في جين **CFTR**، المرتبط بمرض **التليف الكيسي (Cystic Fibrosis - CF)**. يشير وجود هذه التغيرات الثلاثة إلى خطر كبير للإصابة بشكل من أشكال التليف الكيسي أو اضطراب مرتبط به. لديك أيضاً تغير ممرض في جين **BRCA1**، مما يزيد من خطر إصابتك بـ **سرطان الثدي والمبيض الوراثي**. يوصى بشدة بإجراء استشارات فورية مع أخصائيين (أخصائي أمراض الدم لفقر الدم المنجلي، وأخصائي التليف الكيسي، ومستشار وراثي للسرطان) لتأكيد هذه النتائج والبدء في التخطيط لرعايتك الطبية وإدارة المخاطر."
 }), []);
 
+  // Initialize Tier 1 and Tier 2 variants by default
+  useEffect(() => {
+    if (reportData?.variants) {
+      const tier1And2Variants = reportData.variants.filter((variant: any) => {
+        const tier = variant.tier || "";
+        return tier === "Tier 1" || tier === "Tier 2";
+      });
+
+      const initialActions: AddedVariantAction[] = tier1And2Variants.map((variant: any) => {
+        const variantKey = getVariantKey(variant);
+        return {
+          variant,
+          actionTypes: [],
+          id: `${variantKey}-${Date.now()}-${Math.random()}`,
+        };
+      });
+
+      // Only set if we haven't initialized yet (avoid overwriting user changes)
+      setAddedVariantActions((prev) => {
+        if (prev.length === 0) {
+          return initialActions;
+        }
+        return prev;
+      });
+    }
+  }, [reportData]);
+
   const sectionVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({
@@ -481,6 +528,7 @@ const GenomicReport = () => {
         <TieredVariantAnalysisSection
           data={reportData}
           onAddVariantAction={handleAddVariantAction}
+          addedVariants={addedVariantKeys}
         />
       ),
     },
